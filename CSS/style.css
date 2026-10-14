@@ -1,0 +1,32 @@
+h1{
+    color: #1e3a8a;
+    font-family: "Arial Black";
+    padding: 0px 0px 12px 0px;
+    border-bottom: 2px solid #1e3a8a;
+}
+
+h2
+{
+ color: #b91c1c;
+ font-family: 'Times New Roman', Times, serif;
+}
+h3{
+   color: #047857;
+   font-family: 'Courier New', Courier, monospace;
+}
+
+h4{
+    color: #4b5563;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h5{
+    color: #6b7280;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h6{
+    color: #9ca3af;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
