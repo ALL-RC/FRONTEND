@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.T.A.R. - NASA Trans-Dimensional Recruitment</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF CDN for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* CSS customizado seguindo especificações de design */
+        :root {
+            --nasa-blue: #0B3D91;
+            --nasa-blue-hover: #1D4ED8;
+            --nasa-red: #DC2626;
+            --nasa-green: #16A34A;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #F8FAFC;
+            color: #1E293B;
+        }
+
+        /* Botões com formato retangular e cantos levemente arredondados (4px - 6px) */
+        .btn-nasa {
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn-primary {
+            background-color: var(--nasa-blue);
+            color: #FFFFFF;
+        }
+        .btn-primary:hover {
+            background-color: var(--nasa-blue-hover);
+            box-shadow: 0 4px 12px rgba(11, 61, 145, 0.25);
+        }
+
+        .btn-secondary {
+            background-color: #E2E8F0;
+            color: #334155;
+        }
+        .btn-secondary:hover {
+            background-color: #CBD5E1;
+        }
+
+        .btn-success {
+            background-color: var(--nasa-green);
+            color: #FFFFFF;
+        }
+        .btn-success:hover {
+            background-color: #15803D;
+        }
+
+        .btn-danger {
+            background-color: var(--nasa-red);
+            color: #FFFFFF;
+        }
+
+        /* Animação suave para troca de etapas */
+        .step-panel {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .step-panel.hidden {
+            display: none !important;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94A3B8;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative bg-slate-50">
+
+    <!-- MODAL DE ALERTA DE VALIDAÇÃO (Substitui alert() nativo) -->
+    <div id="custom-alert" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-md border-l-8 border-red-600 p-6 max-w-md w-full shadow-2xl mx-4 transform transition-all">
+            <div class="flex items-start gap-4">
+                <div class="p-2 bg-red-100 rounded-md text-red-600">
+                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-900" id="alert-title">Formato Invalido</h3>
+                    <p class="text-sm text-gray-600 mt-1" id="alert-message">O campo informado aceita apenas um formato de resposta específico.</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeAlert()" class="btn-nasa btn-primary px-5 py-2 text-sm">Compreendido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CABEÇALHO DA INSTITUIÇÃO -->
+    <header class="bg-[#0B3D91] text-white shadow-lg border-b-4 border-blue-400">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3 text-center sm:text-left">
+                <!-- Logotipo Simulado NASA S.T.A.R. -->
+                <div class="w-12 h-12 rounded-md bg-white text-[#0B3D91] flex items-center justify-center font-black text-xl shadow-inner border border-blue-200">
+                    STAR
+                </div>
+                <div>
+                    <h1 class="text-lg font-extrabold tracking-wide uppercase leading-tight">Divisão S.T.A.R. &bull; NASA</h1>
+                    <p class="text-xs text-blue-200 font-medium">Sub-Spatial & Trans-Dimensional Astrophysics Research Division</p>
+                </div>
+            </div>
+            <div class="text-right hidden sm:block">
+                <span class="inline-block px-3 py-1 bg-blue-900/80 text-blue-200 text-xs font-mono rounded border border-blue-700">
+                    PROJETO SINGULARIDADE #2026-X
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL / CONTAINER DO FORMULÁRIO -->
+    <main class="max-w-4xl mx-auto w-full px-4 py-8 flex-grow">
+        
+        <!-- BARRA DE PROGRESSO (INDICADOR DAS 3 ETAPAS) -->
+        <div class="mb-8 bg-white p-4 rounded-md shadow-sm border border-slate-200">
+            <div class="flex items-center justify-between relative">
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 z-0"></div>
+                <div id="progress-line" class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-[#0B3D91] z-0 transition-all duration-300 w-0"></div>
+
+                <!-- Passo 1 Indicator -->
+                <div id="indicator-1" class="relative z-10 flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-md bg-[#0B3D91] text-white font-bold flex items-center justify-center shadow-md border-2 border-white transition-all">
+                        1
+                    </div>
+                    <span class="text-xs font-bold text-[#0B3D91] mt-2 text-center">Dados Pessoais & Médicos</span>
+                </div>
+
+                <!-- Passo 2 Indicator -->
+                <div id="indicator-2" class="relative z-10 flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-md bg-slate-200 text-slate-600 font-bold flex items-center justify-center shadow-md border-2 border-white transition-all">
+                        2
+                    </div>
+                    <span class="text-xs font-semibold text-slate-500 mt-2 text-center">Termo de Isenção</span>
+                </div>
+
+                <!-- Passo 3 Indicator -->
+                <div id="indicator-3" class="relative z-10 flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-md bg-slate-200 text-slate-600 font-bold flex items-center justify-center shadow-md border-2 border-white transition-all">
+                        3
+                    </div>
+                    <span class="text-xs font-semibold text-slate-500 mt-2 text-center">Conclusão & Ficha</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORMULÁRIO MULTI-ETAPAS -->
+        <form id="recruitment-form" onsubmit="return false;" class="bg-white rounded-md shadow-md border border-slate-200 overflow-hidden">
+            
+            <!-- ==================== ETAPA 1: INFORMAÇÕES PESSOAIS E MÉDICAS ==================== -->
+            <div id="step-1" class="step-panel p-6 sm:p-8">
+                <div class="border-b border-slate-200 pb-4 mb-6">
+                    <h2 class="text-xl font-bold text-[#0B3D91] flex items-center gap-2">
+                        <i data-lucide="user-check" class="w-5 h-5"></i>
+                        Etapa 1: Cadastro do Candidato a Voluntário Interdimensional
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">Forneça seus dados cadastrais e histórico clínico para homologação física preliminar.</p>
+                </div>
+
+                <!-- SEÇÃO DADOS PESSOAIS -->
+                <div class="space-y-4 mb-8">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-3 py-1 rounded-sm border-l-4 border-[#0B3D91]">
+                        1.1 Informações Pessoais
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Nome Completo -->
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1" for="nome">Nome Completo *</label>
+                            <input type="text" id="nome" name="nome" placeholder="Ex: Arthur Pendelton Dent"
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                   onkeydown="validateNameInput(event)">
+                            <p class="text-[11px] text-slate-400 mt-1">Apenas letras e espaços são permitidos.</p>
+                        </div>
+
+                        <!-- Idade -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1" for="idade">Idade (18 a 65 anos) *</label>
+                            <input type="number" id="idade" name="idade" min="18" max="65" placeholder="Ex: 32"
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                   onkeydown="validateNumberInput(event)" onblur="checkAgeLimits(this)">
+                        </div>
+
+                        <!-- CPF -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1" for="cpf">CPF *</label>
+                            <input type="text" id="cpf" name="cpf" maxlength="14" placeholder="000.000.000-00"
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                   oninput="applyCPFMask(this)" onkeydown="validateDigitOnlyInput(event, 'CPF')">
+                            <p class="text-[11px] text-slate-400 mt-1">Formato obrigatório: 000.000.000-00</p>
+                        </div>
+
+                        <!-- Telefone -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1" for="telefone">Telefone / Celular *</label>
+                            <input type="text" id="telefone" name="telefone" maxlength="15" placeholder="(00) 00000-0000"
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                   oninput="applyPhoneMask(this)" onkeydown="validateDigitOnlyInput(event, 'Telefone')">
+                        </div>
+
+                        <!-- E-mail -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1" for="email">E-mail Corporativo/Pessoal *</label>
+                            <input type="email" id="email" name="email" placeholder="voluntario@nasa-star.gov"
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        </div>
+
+                        <!-- Endereço Completo -->
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1" for="endereco">Endereço Residencial Completo *</label>
+                            <input type="text" id="endereco" name="endereco" placeholder="Rua, Número, Bairro, Cidade - Estado, CEP"
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO DADOS MÉDICOS -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-3 py-1 rounded-sm border-l-4 border-[#0B3D91]">
+                        1.2 Prontuário Médico Bio-Espacial
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Tipo Sanguíneo -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1" for="tipoSanguineo">Tipo Sanguíneo *</label>
+                            <select id="tipoSanguineo" name="tipoSanguineo" class="w-full px-3 py-2 border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                                <option value="">Selecione...</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+
+                        <!-- Condição Física Geral -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1" for="condicaoFisica">Condição Física Geral *</label>
+                            <select id="condicaoFisica" name="condicaoFisica" class="w-full px-3 py-2 border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                                <option value="">Selecione...</option>
+                                <option value="Excelente (Atleta / Treino Intenso)">Excelente (Atleta / Treino Intenso)</option>
+                                <option value="Boa (Pratica exercícios regularmente)">Boa (Pratica exercícios regularmente)</option>
+                                <option value="Moderada (Exercícios ocasionais)">Moderada (Exercícios ocasionais)</option>
+                                <option value="Sedentária">Sedentária</option>
+                            </select>
+                        </div>
+
+                        <!-- Alergias -->
+                        <div class="md:col-span-2">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-xs font-bold text-slate-700 uppercase" for="alergias">Alergias Conhecidas *</label>
+                                <button type="button" onclick="setNoneField('alergias')" class="text-xs text-blue-700 hover:underline font-semibold flex items-center gap-1">
+                                    <i data-lucide="check-circle-2" class="w-3 h-3"></i> Marcar "Nenhum"
+                                </button>
+                            </div>
+                            <textarea id="alergias" name="alergias" rows="2" placeholder="Descreva alergias a medicamentos, alimentos ou substâncias..."
+                                      class="w-full px-3 py-2 border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"></textarea>
+                        </div>
+
+                        <!-- Histórico Cardíaco -->
+                        <div class="md:col-span-2">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-xs font-bold text-slate-700 uppercase" for="historicoCardiaco">Histórico de Problemas Cardíacos *</label>
+                                <button type="button" onclick="setNoneField('historicoCardiaco')" class="text-xs text-blue-700 hover:underline font-semibold flex items-center gap-1">
+                                    <i data-lucide="check-circle-2" class="w-3 h-3"></i> Marcar "Nenhum"
+                                </button>
+                            </div>
+                            <textarea id="historicoCardiaco" name="historicoCardiaco" rows="2" placeholder="Descreva sopros, arritmias, cirurgias ou histórico familiar..."
+                                      class="w-full px-3 py-2 border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"></textarea>
+                        </div>
+
+                        <!-- Medicamentos Contínuos -->
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1" for="medicamentos">Uso de Medicamentos Contínuos *</label>
+                            <input type="text" id="medicamentos" name="medicamentos" placeholder="Caso não utilize, digite 'Nenhum'"
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTÃO DE AVANÇAR -->
+                <div class="mt-8 flex justify-end pt-4 border-t border-slate-200">
+                    <button type="button" onclick="goToStep2()" class="btn-nasa btn-primary px-8 py-3 flex items-center gap-2 text-sm shadow">
+                        Avançar para o Termo de Responsabilidade
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==================== ETAPA 2: TERMO DE AUTORRESPONSABILIDADE ==================== -->
+            <div id="step-2" class="step-panel p-6 sm:p-8 hidden">
+                <div class="border-b border-slate-200 pb-4 mb-6">
+                    <h2 class="text-xl font-bold text-[#0B3D91] flex items-center gap-2">
+                        <i data-lucide="shield-alert" class="w-5 h-5 text-red-600"></i>
+                        Etapa 2: Termo de Autorresponsabilidade e Isenção Transdimensional
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">Leia com extrema atenção as cláusulas contratuais de viagem quântica interdimensional.</p>
+                </div>
+
+                <!-- BOX DO TEXTO JURÍDICO -->
+                <div class="bg-slate-50 border border-slate-300 rounded-md p-4 sm:p-6 mb-6 max-h-72 overflow-y-auto text-xs leading-relaxed text-slate-700 font-mono shadow-inner">
+                    <p class="font-bold text-center text-slate-900 mb-4 text-sm uppercase">
+                        DECLARAÇÃO LEGAL E JURÍDICO-CIENTÍFICA DE ISENÇÃO TOTAL DE RESPONSABILIDADE<br>
+                        SUB-SPATIAL & TRANS-DIMENSIONAL ASTROPHYSICS RESEARCH DIVISION (S.T.A.R. / NASA)
+                    </p>
+                    <p class="mb-3">
+                        Pelo presente instrumento, eu, devidamente identificado e cadastrado na Etapa 1 deste processo, declaro estar plenamente ciente de que o recrutamento para o <strong>Projeto Singularidade</strong> envolve experimentos de transposição contínua através de pontes de Einstein-Rosen (buracos de minhoca artificiais).
+                    </p>
+                    <p class="mb-3">
+                        <strong>CLÁUSULA PRIMEIRA - RISCOS ESPAÇO-TEMPORAIS EXTREMOS:</strong> O voluntário declara ciência incondicional quanto aos riscos inerentes à mecânica quântica de campos, incluindo, mas não se limitando a:
+                    </p>
+                    <ul class="list-disc list-inside mb-3 pl-2 space-y-1">
+                        <li>Deformação ou compressão do tecido espaço-tempo corporal;</li>
+                        <li>Deslocamento quântico não planejado para realidades paralelas ou dimensões hiper-espaciais;</li>
+                        <li>Efeitos severos de dilatação temporal (divergência cronológica relativa à Terra);</li>
+                        <li>Colapso inesperado de dobra espacial durante a travessia do horizonte de eventos;</li>
+                        <li>Desalinhamento de spin atômico ou entropia molecular temporária.</li>
+                    </ul>
+                    <p class="mb-3">
+                        <strong>CLÁUSULA SEGUNDA - ISENÇÃO DE RESPONSABILIDADE DA INSTITUIÇÃO:</strong> A NASA, a divisão S.T.A.R., seus cientistas, engenheiros e governos parceiros eximem-se categoricamente de qualquer responsabilidade civil, penal, temporal ou jurídica por danos morais, físicos, genéticos, extrapolação temporal ou desaparecimento interdimensional do voluntário.
+                    </p>
+                    <p class="mb-3">
+                        <strong>CLÁUSULA TERCEIRA - VOLUNTARIEDADE E CAPACIDADE MENTAL:</strong> Atesto que esta decisão é tomada por livre e espontânea vontade, sem coação física ou mental, estando em pleno gozo de minhas faculdades mentais.
+                    </p>
+                </div>
+
+                <!-- ACEITE E ASSINATURA DIGITAL -->
+                <div class="space-y-6 bg-blue-50/60 p-4 border border-blue-200 rounded-md">
+                    <!-- Checkbox de Aceite -->
+                    <div class="flex items-start gap-3">
+                        <input type="checkbox" id="aceiteTermos" class="mt-1 w-5 h-5 text-blue-800 rounded border-slate-300 focus:ring-blue-600 cursor-pointer">
+                        <label for="aceiteTermos" class="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer">
+                            Li, entendi e aceito integralmente todas as cláusulas e riscos de viagens interdimensionais descritos no Termo de Isenção S.T.A.R. NASA. *
+                        </label>
+                    </div>
+
+                    <!-- Assinatura Digital -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1" for="assinaturaDigital">
+                            Assinatura Digital (Digite seu Nome Completo idêntico ao cadastrado) *
+                        </label>
+                        <input type="text" id="assinaturaDigital" placeholder="Digite seu Nome Completo aqui..."
+                               class="w-full px-3 py-2 border border-slate-300 rounded-md text-slate-900 font-serif text-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        <p class="text-[11px] text-slate-500 mt-1">A assinatura será validada criptograficamente e anexada ao PDF oficial.</p>
+                    </div>
+                </div>
+
+                <!-- BOTÕES DE NAVEGAÇÃO ETAPA 2 -->
+                <div class="mt-8 flex justify-between items-center pt-4 border-t border-slate-200">
+                    <button type="button" onclick="goToStep1()" class="btn-nasa btn-secondary px-6 py-2.5 flex items-center gap-2 text-sm">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        Voltar para Etapa 1
+                    </button>
+                    <button type="button" onclick="submitAndGoToStep3()" class="btn-nasa btn-success px-8 py-3 flex items-center gap-2 text-sm shadow">
+                        Finalizar e Assinar Termo
+                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==================== ETAPA 3: PÁGINA DE AGRADECIMENTO E CONCLUSÃO ==================== -->
+            <div id="step-3" class="step-panel p-6 sm:p-8 hidden">
+                <div class="text-center max-w-2xl mx-auto py-4">
+                    
+                    <!-- Ícone de Sucesso -->
+                    <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-green-200 shadow-md">
+                        <i data-lucide="rocket" class="w-10 h-10"></i>
+                    </div>
+
+                    <h2 class="text-2xl font-black text-[#0B3D91] uppercase tracking-wide">
+                        Inscrição Homologada com Sucesso!
+                    </h2>
+                    <p class="text-sm text-slate-600 mt-2">
+                        Seus dados foram integrados com sucesso à base da <strong>Divisão S.T.A.R. (NASA)</strong> para o Projeto Singularidade.
+                    </p>
+
+                    <!-- CARD INFORMATIVO DE PRÓXIMOS PASSOS -->
+                    <div class="mt-6 bg-slate-50 border border-slate-200 rounded-md p-6 text-left space-y-3 text-xs sm:text-sm text-slate-700 shadow-sm">
+                        <h4 class="font-bold text-slate-900 uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
+                            <i data-lucide="info" class="w-4 h-4 text-blue-600"></i>
+                            Instruções Importantes para a Fase II:
+                        </h4>
+                        <p>&bull; <strong>Relatório de Inscrição PDF:</strong> O download do seu comprovante e Ficha de Recrutamento foi iniciado automaticamente no seu navegador.</p>
+                        <p>&bull; <strong>Convocação Médica Presencial:</strong> Você receberá uma notificação via e-mail e telefone cadastrados em até 72 horas para exames de ressonância quântica e densidade molecular.</p>
+                        <p>&bull; <strong>Código do Candidato:</strong> <span id="candidato-token" class="font-mono font-bold text-blue-800 bg-blue-100 px-2 py-0.5 rounded">STAR-2026-X891</span></p>
+                    </div>
+
+                    <!-- AÇÕES NA ETAPA 3 -->
+                    <div class="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+                        <button type="button" onclick="generateAndDownloadPDF()" class="btn-nasa btn-primary px-6 py-3 w-full sm:w-auto flex items-center justify-center gap-2 text-sm shadow">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            Baixar Ficha em PDF Novamente
+                        </button>
+                        <button type="button" onclick="resetForm()" class="btn-nasa btn-secondary px-6 py-3 w-full sm:w-auto flex items-center justify-center gap-2 text-sm">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                            Novo Cadastro
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </main>
+
+    <!-- RODAPÉ DA APLICAÇÃO -->
+    <footer class="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 text-center text-xs">
+        <div class="max-w-5xl mx-auto px-4 space-y-2">
+            <p>&copy; 2026 NASA &bull; Sub-Spatial & Trans-Dimensional Astrophysics Research Division (S.T.A.R.). Todos os direitos reservados.</p>
+            <p class="text-slate-500 text-[11px]">Ambiente Restrito de Seleção Transdimensional. Código de Segurança: AX-9021-WORMHOLE.</p>
+        </div>
+    </footer>
+
+    <!-- LOGICA JAVASCRIPT EXCLUSIVA -->
+    <script>
+        // Inicialização de Ícones Lucide
+        lucide.createIcons();
+
+        // Estado Global da Aplicação
+        const formData = {
+            nome: '',
+            idade: '',
+            cpf: '',
+            telefone: '',
+            email: '',
+            endereco: '',
+            tipoSanguineo: '',
+            condicaoFisica: '',
+            alergias: '',
+            historicoCardiaco: '',
+            medicamentos: '',
+            dataAssinatura: ''
+        };
+
+        // --- SISTEMA DE ALERTA CUSTOMIZADO (Substitui alert()) ---
+        function showAlert(title, message) {
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-message').innerText = message;
+            document.getElementById('custom-alert').classList.remove('hidden');
+        }
+
+        function closeAlert() {
+            document.getElementById('custom-alert').classList.add('hidden');
+        }
+
+        // --- MÁSCARAS E VALIDAÇÕES DE ENTRADA RESTREITAS ---
+
+        // Validação de Nome (Apenas Letras e Espaços)
+        function validateNameInput(event) {
+            const key = event.key;
+            // Permitir teclas de navegação, backspace, tab, etc.
+            if (['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete', ' '].includes(key)) return;
+            
+            // Se tentar digitar um número ou caractere especial
+            if (!/^[a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]$/.test(key)) {
+                event.preventDefault();
+                showAlert('Alerta de Formato', 'O campo Nome Completo aceita apenas letras e espaços.');
+            }
+        }
+
+        // Validação de Idade (Números e Limite de 18 a 65)
+        function validateNumberInput(event) {
+            const key = event.key;
+            if (['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(key)) return;
+
+            if (!/^[0-9]$/.test(key)) {
+                event.preventDefault();
+                showAlert('Alerta de Formato', 'O campo Idade aceita apenas números inteiros.');
+            }
+        }
+
+        function checkAgeLimits(input) {
+            const age = parseInt(input.value, 10);
+            if (isNaN(age)) return;
+            if (age < 18 || age > 65) {
+                showAlert('Restrição de Idade', 'Os testes de viagem interdimensional exigem idade entre 18 e 65 anos.');
+                input.value = '';
+            }
+        }
+
+        // Validação estrita para aceitar apenas dígitos em CPF/Telefone
+        function validateDigitOnlyInput(event, fieldName) {
+            const key = event.key;
+            if (['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(key)) return;
+
+            if (!/^[0-9]$/.test(key)) {
+                event.preventDefault();
+                showAlert('Alerta de Formato Invalido', `O campo ${fieldName} aceita apenas números.`);
+            }
+        }
+
+        // Máscara de CPF (XXX.XXX.XXX-XX)
+        function applyCPFMask(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+
+            input.value = value;
+        }
+
+        // Máscara de Telefone ((XX) XXXXX-XXXX)
+        function applyPhoneMask(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+
+            if (value.length > 10) {
+                value = value.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+            } else if (value.length > 6) {
+                value = value.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+            } else if (value.length > 2) {
+                value = value.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+            } else if (value.length > 0) {
+                value = value.replace(/^(\d*)$/, '($1');
+            }
+
+            input.value = value;
+        }
+
+        // Atalho para preencher "Nenhum" em campos de saúde
+        function setNoneField(fieldId) {
+            document.getElementById(fieldId).value = 'Nenhum';
+        }
+
+        // --- VALIDAÇÃO DE NAVEGAÇÃO ENTRE ETAPAS ---
+
+        function goToStep2() {
+            // Coletar Dados Etapa 1
+            formData.nome = document.getElementById('nome').value.trim();
+            formData.idade = document.getElementById('idade').value.trim();
+            formData.cpf = document.getElementById('cpf').value.trim();
+            formData.telefone = document.getElementById('telefone').value.trim();
+            formData.email = document.getElementById('email').value.trim();
+            formData.endereco = document.getElementById('endereco').value.trim();
+            formData.tipoSanguineo = document.getElementById('tipoSanguineo').value;
+            formData.condicaoFisica = document.getElementById('condicaoFisica').value;
+            formData.alergias = document.getElementById('alergias').value.trim();
+            formData.historicoCardiaco = document.getElementById('historicoCardiaco').value.trim();
+            formData.medicamentos = document.getElementById('medicamentos').value.trim();
+
+            // Validações de Preenchimento Obrigatório
+            if (!formData.nome || formData.nome.length < 3) {
+                showAlert('Campo Incompleto', 'Por favor, informe seu Nome Completo válido.');
+                return;
+            }
+            if (!formData.idade || formData.idade < 18 || formData.idade > 65) {
+                showAlert('Campo Incompleto', 'Por favor, informe uma idade válida entre 18 e 65 anos.');
+                return;
+            }
+            if (formData.cpf.length < 14) {
+                showAlert('CPF Incompleto', 'O CPF deve ser informado no formato completo XXX.XXX.XXX-XX.');
+                return;
+            }
+            if (formData.telefone.length < 14) {
+                showAlert('Telefone Incompleto', 'Por favor, informe um número de telefone válido com DDD.');
+                return;
+            }
+            if (!formData.email || !formData.email.includes('@')) {
+                showAlert('E-mail Inválido', 'Por favor, insira um endereço de e-mail válido.');
+                return;
+            }
+            if (!formData.endereco) {
+                showAlert('Campo Incompleto', 'O Endereço completo é obrigatório.');
+                return;
+            }
+            if (!formData.tipoSanguineo) {
+                showAlert('Campo Incompleto', 'Selecione seu Tipo Sanguíneo.');
+                return;
+            }
+            if (!formData.condicaoFisica) {
+                showAlert('Campo Incompleto', 'Selecione sua Condição Física Geral.');
+                return;
+            }
+            if (!formData.alergias) {
+                showAlert('Campo Incompleto', 'Preencha o campo de alergias (ou clique no botão "Marcar Nenhum").');
+                return;
+            }
+            if (!formData.historicoCardiaco) {
+                showAlert('Campo Incompleto', 'Preencha o histórico cardíaco (ou clique no botão "Marcar Nenhum").');
+                return;
+            }
+            if (!formData.medicamentos) {
+                showAlert('Campo Incompleto', 'Informe se faz uso de medicamentos contínuos.');
+                return;
+            }
+
+            // Alternar Visualização para Etapa 2
+            document.getElementById('step-1').classList.add('hidden');
+            document.getElementById('step-2').classList.remove('hidden');
+
+            // Atualizar Indicador de Progresso
+            updateProgressBar(2);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goToStep1() {
+            document.getElementById('step-2').classList.add('hidden');
+            document.getElementById('step-1').classList.remove('hidden');
+            updateProgressBar(1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function submitAndGoToStep3() {
+            const aceite = document.getElementById('aceiteTermos').checked;
+            const assinatura = document.getElementById('assinaturaDigital').value.trim();
+
+            if (!aceite) {
+                showAlert('Aceite Obrigatório', 'Você precisa confirmar e aceitar os termos de autorresponsabilidade para prosseguir.');
+                return;
+            }
+
+            if (!assinatura || assinatura.toLowerCase() !== formData.nome.toLowerCase()) {
+                showAlert('Assinatura Divergente', 'A Assinatura Digital deve corresponder exatamente ao Nome Completo digitado na Etapa 1.');
+                return;
+            }
+
+            // Registrar Data/Hora da Assinatura
+            const now = new Date();
+            formData.dataAssinatura = now.toLocaleString('pt-BR');
+
+            // Gerar Token do Candidato
+            const randomCode = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('candidato-token').innerText = `STAR-2026-X${randomCode}`;
+
+            // Alternar para Etapa 3
+            document.getElementById('step-2').classList.add('hidden');
+            document.getElementById('step-3').classList.remove('hidden');
+
+            updateProgressBar(3);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Download automático do PDF
+            setTimeout(() => {
+                generateAndDownloadPDF();
+            }, 500);
+        }
+
+        function updateProgressBar(step) {
+            const line = document.getElementById('progress-line');
+            const ind2 = document.getElementById('indicator-2').children[0];
+            const ind2Text = document.getElementById('indicator-2').children[1];
+            const ind3 = document.getElementById('indicator-3').children[0];
+            const ind3Text = document.getElementById('indicator-3').children[1];
+
+            if (step === 1) {
+                line.style.width = '0%';
+                ind2.className = "w-10 h-10 rounded-md bg-slate-200 text-slate-600 font-bold flex items-center justify-center shadow-md border-2 border-white transition-all";
+                ind2Text.className = "text-xs font-semibold text-slate-500 mt-2 text-center";
+                ind3.className = "w-10 h-10 rounded-md bg-slate-200 text-slate-600 font-bold flex items-center justify-center shadow-md border-2 border-white transition-all";
+                ind3Text.className = "text-xs font-semibold text-slate-500 mt-2 text-center";
+            } else if (step === 2) {
+                line.style.width = '50%';
+                ind2.className = "w-10 h-10 rounded-md bg-[#0B3D91] text-white font-bold flex items-center justify-center shadow-md border-2 border-white transition-all";
+                ind2Text.className = "text-xs font-bold text-[#0B3D91] mt-2 text-center";
+                ind3.className = "w-10 h-10 rounded-md bg-slate-200 text-slate-600 font-bold flex items-center justify-center shadow-md border-2 border-white transition-all";
+                ind3Text.className = "text-xs font-semibold text-slate-500 mt-2 text-center";
+            } else if (step === 3) {
+                line.style.width = '100%';
+                ind2.className = "w-10 h-10 rounded-md bg-[#0B3D91] text-white font-bold flex items-center justify-center shadow-md border-2 border-white transition-all";
+                ind3.className = "w-10 h-10 rounded-md bg-[#16A34A] text-white font-bold flex items-center justify-center shadow-md border-2 border-white transition-all";
+                ind3Text.className = "text-xs font-bold text-[#16A34A] mt-2 text-center";
+            }
+        }
+
+        // --- GERAÇÃO E DOWNLOAD DO RELATÓRIO EM PDF (jsPDF) ---
+
+        function generateAndDownloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            // Cabeçalho PDF - NASA / S.T.A.R.
+            doc.setFillColor(11, 61, 145); // Azul NASA (#0B3D91)
+            doc.rect(0, 0, 210, 28, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.text("S.T.A.R. - NASA ASTROPHYSICS DIVISION", 15, 12);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.text("FICHA OFICIAL DE RECRUTAMENTO - VIAGEM INTERDIMENSIONAL", 15, 18);
+            doc.text("PROJETO SINGULARIDADE", 150, 18);
+
+            // Linha decorativa
+            doc.setDrawColor(220, 38, 38); // Vermelho NASA
+            doc.setLineWidth(1);
+            doc.line(0, 28, 210, 28);
+
+            // Seção 1: Dados do Candidato
+            doc.setTextColor(11, 61, 145);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text("1. INFORMAÇÕES PESSOAIS E IDENTIFICAÇÃO", 15, 40);
+
+            doc.setDrawColor(200, 200, 200);
+            doc.setLineWidth(0.3);
+            doc.rect(15, 43, 180, 45);
+
+            doc.setTextColor(40, 40, 40);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+
+            doc.text(`Nome Completo: ${formData.nome}`, 20, 51);
+            doc.text(`Idade: ${formData.idade} anos`, 140, 51);
+            
+            doc.text(`CPF: ${formData.cpf}`, 20, 59);
+            doc.text(`Telefone: ${formData.telefone}`, 140, 59);
+
+            doc.text(`E-mail: ${formData.email}`, 20, 67);
+            doc.text(`Endereço: ${formData.endereco}`, 20, 75);
+            doc.text(`Data do Homologamento: ${formData.dataAssinatura}`, 20, 83);
+
+            // Seção 2: Dados Médicos
+            doc.setTextColor(11, 61, 145);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text("2. AVALIAÇÃO DE SAÚDE E BIOMETRIA QUÂNTICA", 15, 98);
+
+            doc.rect(15, 101, 180, 55);
+
+            doc.setTextColor(40, 40, 40);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+
+            doc.text(`Tipo Sanguíneo: ${formData.tipoSanguineo}`, 20, 109);
+            doc.text(`Condição Física Geral: ${formData.condicaoFisica}`, 100, 109);
+
+            doc.text(`Alergias Conhecidas: ${formData.alergias}`, 20, 119);
+            doc.text(`Histórico Cardíaco: ${formData.historicoCardiaco}`, 20, 129);
+            doc.text(`Uso de Medicamentos Contínuos: ${formData.medicamentos}`, 20, 139);
+
+            // Seção 3: Termo e Assinatura
+            doc.setTextColor(11, 61, 145);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text("3. TERMO DE AUTORRESPONSABILIDADE E HOMOLOGAÇÃO", 15, 168);
+
+            doc.rect(15, 171, 180, 65);
+
+            doc.setFontSize(8.5);
+            doc.setTextColor(80, 80, 80);
+            const termoResumido = "O voluntario acima qualificado declara estar totalmente ciente dos riscos inerentes as viagens interdimensionais por buracos de minhoca, incluindo colapso de dobra espacial, dilatacao temporal severa e deslocamento quântico. A NASA e a Divisao S.T.A.R. estao isentas de qualquer responsabilidade civil ou fisica.";
+            const lines = doc.splitTextToSize(termoResumido, 170);
+            doc.text(lines, 20, 179);
+
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Status do Aceite: ACEITO E ASSINADO DIGITALMENTE`, 20, 198);
+            doc.text(`Assinatura Registrada: ${formData.nome}`, 20, 206);
+            doc.text(`Código Hash de Autenticação: ${document.getElementById('candidato-token').innerText}`, 20, 214);
+
+            // Carimbo de Aprovação
+            doc.setDrawColor(22, 163, 74); // Verde
+            doc.setLineWidth(0.8);
+            doc.rect(130, 193, 58, 25);
+            doc.setTextColor(22, 163, 74);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text("NASA / S.T.A.R.", 142, 201);
+            doc.setFontSize(8);
+            doc.text("HOMOLOGADO", 145, 208);
+
+            // Rodapé do PDF
+            doc.setFillColor(240, 240, 240);
+            doc.rect(0, 280, 210, 17, 'F');
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.setFont('helvetica', 'normal');
+            doc.text("Documento emitido eletronicamente pela Divisão de Astrofísica da NASA. Válido em todo o território nacional e setores transdimensionais.", 15, 287);
+
+            // Salvar / Fazer Download do PDF
+            const cleanCpf = formData.cpf.replace(/\D/g, '');
+            doc.save(`Ficha_Recrutamento_STAR_NASA_${cleanCpf}.pdf`);
+        }
+
+        // Reiniciar Formulário
+        function resetForm() {
+            document.getElementById('recruitment-form').reset();
+            document.getElementById('step-3').classList.add('hidden');
+            document.getElementById('step-1').classList.remove('hidden');
+            updateProgressBar(1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
