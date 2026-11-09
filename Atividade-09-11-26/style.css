@@ -1,0 +1,85 @@
+/* ============================================================
+DESAFIO DOS 6 BUGS DE FLEXBOX - DIA 03
+Instruções:Explique e corrija os 6 erros de CSS abaixo!
+============================================================ */
+
+/* RESET E CORPO */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  }
+
+body {
+background-color: #f4f6f9;
+padding: 20px;
+}
+
+/* ============================================================
+BUG 1: O formulário não está alinhando os elementos lado a lado!
+O QUE FALTOU : faltou a propriedade display:flex no formulário
+============================================================ */
+#form-tarefa {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+/* ============================================================
+BUG 2: Propriedade de espaçamento inválida!
+O QUE FALTOU : faltou a unidade de medida no gap do container de tarefas
+============================================================ */
+#lista-tarefas {
+display: flex;
+flex-direction: column;
+gap: 20px; /* ERRO AQUI */
+}
+
+/* ============================================================
+BUG 3: Valor de alinhamento inexistente!
+O QUE FALTOU : faltou a propriedade align-items: center; no header para centralizar o conteúdo
+============================================================ */
+header {
+display: flex;
+flex-direction: column;
+align-items: center;
+background-color: #2c3e50;
+color: white;
+padding: 20px;
+}
+
+/* ============================================================
+BUG 4: Erro de digitação na direção do flex!
+O QUE FALTOU : faltou a propriedade flex-direction: row; no article para alinhar os elementos horizontalmente
+============================================================ */
+article {
+display: flex;
+flex-direction: row;
+gap: 15px;
+justify-content: space-between;
+padding: 15px;
+background-color: white;
+}
+
+/* ============================================================
+BUG 5: Valor de alinhamento vertical incorreto!
+O QUE FALTOU : faltou a propriedade align-items: center; no container de ações para centralizar os elementos verticalmente
+============================================================ */
+article .acoes {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+/* ============================================================
+BUG 6: Sintaxe incorreta na Media Query!
+O QUE FALTOU : faltou a propriedade @media (max-width: 600px) 
+============================================================ */
+@media (max-width: 600px) {
+    #form-tarefa {
+flex-direction: column;
+}
+}
+
+
