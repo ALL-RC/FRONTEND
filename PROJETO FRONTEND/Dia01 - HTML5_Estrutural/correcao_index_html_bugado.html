@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- BUG 1: Tag de título aberta mas não fechada -->
+  <title>DevTask - Meu Painel de Estudos
+</head>
+<body>
+
+  <!-- BUG 2: Tag de abertura do cabeçalho escrita com erro -->
+  <heder>
+    <h1>DevTask 🚀</h1>
+    <p>Organize suas tarefas de programação e estudos</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Nova Tarefa</h2>
+      
+      <!-- BUG 3: Tag <from> em vez de <form> -->
+      <from id="form-tarefa">
+        <div>
+          <label for="titulo">Título da Tarefa:</label>
+          <!-- BUG 4: Falta de aspas no valor do atributo id -->
+          <input type="text" id=titulo placeholder="Ex: Estudar Selectors em CSS">
+        </div>
+
+        <div>
+          <!-- BUG 5: Atributo 'for' escrito como 'forr' -->
+          <label forr="categoria">Categoria:</label>
+          <select id="categoria">
+            <option value="HTML">HTML</option>
+            <!-- BUG 6: Tag de abertura <opton> escrita errada -->
+            <opton value="CSS">CSS</option>
+            <!-- BUG 7: Tag de opção sem fechamento </option> -->
+            <option value="JavaScript">JavaScript
+          </select>
+        </div>
+
+        <!-- BUG 8: Fechamento de botão escrito como </botton> -->
+        <button type="submit">Cadastrar Tarefa</botton>
+      </form>
+    </section>
+
+    <hr>
+
+    <section>
+      <h2>Minhas Tarefas</h2>
+      
+      <div id="lista-tarefas">
+        
+        <article>
+          <h3>Aprender Tags Estruturais do HTML</h3>
+          <p><strong>Categoria:</strong> HTML</p>
+          <p><strong>Status:</strong> Pendente</p>
+          <button type="button">Concluir</button>
+          <!-- BUG 9: Botão sem o texto interno ("Excluir") -->
+          <button type="button"></button>
+        </article>
+
+        <!-- BUG 10: Esqueceu a tag de abertura <article> do segundo card -->
+          <h3>Criar a Primeira Estrutura do Projeto</h3>
+          <p><strong>Categoria:</strong> HTML</p>
+          <p><strong>Status:</strong> Concluído</p>
+          <button type="button">Concluir</button>
+          <button type="button">Excluir</button>
+        </article>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- BUG 11: Rodapé fechado incorretamente com </header> -->
+  <footer>
+    <p>Curso Técnico em Informática para Internet • Front-end 2026</p>
+  </header>
+
+<!-- BUG 12: Esqueceu a tag de fechamento </body> antes de </html> -->
+</html>

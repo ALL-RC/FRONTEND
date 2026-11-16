@@ -1,0 +1,1160 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Mural Passo a Passo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: cabeçalho + mapa dos dias + passos; abaixo, editor animado (esquerda) e prévia viva (direita, fixa). */
+:root{
+  --bg:#eef1f6; --surface:#ffffff; --fg:#141a26; --muted:#566074; --line:#d5dce8; --accent:#2f6fed; --accent-fg:#ffffff;
+  --d3:#0b7f70; --d3-bg:#d6f1ec; --d4:#9a5800; --d4-bg:#fbe9c9; --d5:#6a3fc9; --d5-bg:#e9e1fb; --bad:#b3261e; --good:#12794a;
+  --ed-bg:#111827; --ed-fg:#e5e9f2; --ed-dim:#6f7b92; --ed-line:#1e293b; --ed-now:#1d3158; --ed-sel:#26364f;
+  --c-kw:#c792ea; --c-str:#a5d6a7; --c-prop:#82aaff; --c-sel:#ffcb6b; --c-fn:#89ddff; --c-num:#f78c6c;
+  --f-d:'Space Grotesk',system-ui,sans-serif; --f-b:'Inter',system-ui,sans-serif; --f-m:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d121b; --surface:#151c29; --fg:#e8edf5; --muted:#9aa5ba; --line:#263146; --accent:#7aa5ff; --accent-fg:#0b1220;
+  --d3:#52d6c2; --d3-bg:#0f322e; --d4:#ffb95c; --d4-bg:#3a2a0f; --d5:#b9a0ff; --d5-bg:#2a2048; --bad:#ff8a80; --good:#6fe0a2;
+  --ed-bg:#0a0f18; --ed-line:#182233; --ed-now:#1a2d52; --ed-sel:#222f46; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d121b; --surface:#151c29; --fg:#e8edf5; --muted:#9aa5ba; --line:#263146; --accent:#7aa5ff; --accent-fg:#0b1220;
+  --d3:#52d6c2; --d3-bg:#0f322e; --d4:#ffb95c; --d4-bg:#3a2a0f; --d5:#b9a0ff; --d5-bg:#2a2048; --bad:#ff8a80; --good:#6fe0a2;
+  --ed-bg:#0a0f18; --ed-line:#182233; --ed-now:#1a2d52; --ed-sel:#222f46; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-b);font-size:15px;line-height:1.5;
+  padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--f-d);text-wrap:balance;margin:0}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.top h1{font-size:clamp(24px,4vw,34px);line-height:1.1}
+.top p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+.tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px}
+.tab{font:600 14px var(--f-b);border:0;background:transparent;color:var(--muted);padding:8px 14px;border-radius:7px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:0;text-align:left}
+.tab small{font:400 11px var(--f-m);opacity:.85}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-fg)}
+button:focus-visible,.ln:focus-visible,.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.day{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);opacity:.55;text-align:left;font:inherit;color:inherit;cursor:default;min-width:0}
+.day b{font:700 12px var(--f-m);letter-spacing:.04em;text-transform:uppercase;display:block}
+.day span{font-size:12px;line-height:1.3;display:block;color:var(--muted)}
+.day.on{opacity:1;cursor:pointer}
+.day.d3.on{border-color:var(--d3)} .day.d3.on b{color:var(--d3)}
+.day.d4.on{border-color:var(--d4)} .day.d4.on b{color:var(--d4)}
+.day.d5.on{border-color:var(--d5)} .day.d5.on b{color:var(--d5)}
+.day.act{background:var(--bg);box-shadow:inset 0 -3px 0 currentColor}
+.day.d3.act{color:var(--d3)} .day.d4.act{color:var(--d4)} .day.d5.act{color:var(--d5)}
+.day.act span{color:var(--muted)}
+
+.steps{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.chip{flex:0 0 auto;font:500 13px var(--f-b);border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:7px 11px;border-radius:999px;cursor:pointer;display:flex;gap:7px;align-items:center;white-space:nowrap}
+.chip i{font:600 11px var(--f-m);font-style:normal;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--bg);color:var(--muted)}
+.chip.done i{background:var(--good);color:var(--surface)}
+.chip.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.chip.cur i{background:var(--accent);color:var(--accent-fg)}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.col-l{position:sticky;top:12px}
+
+.editor{background:var(--ed-bg);color:var(--ed-fg);border-radius:12px;overflow:hidden;border:1px solid var(--ed-line)}
+.edhead{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--ed-line);font:500 12px var(--f-m);color:var(--ed-dim)}
+.edhead .dots{display:flex;gap:5px}.edhead .dots i{width:9px;height:9px;border-radius:50%;background:var(--ed-line);display:block}
+.edhead .fn{color:var(--ed-fg)} .edhead .pg{margin-left:auto}
+.code{max-height:calc(100vh - 250px);min-height:260px;overflow:auto;padding:8px 0;font:400 13px/1.7 var(--f-m)}
+.ln{display:flex;width:100%;gap:0;border:0;background:transparent;color:inherit;font:inherit;text-align:left;padding:0 14px 0 0;cursor:pointer;border-left:3px solid transparent}
+.ln .n{flex:0 0 42px;text-align:right;padding-right:14px;color:var(--ed-dim);user-select:none;font-variant-numeric:tabular-nums}
+.ln .tx{white-space:pre;flex:1;min-width:0}
+.ln.old{opacity:.62}
+.ln.cur{background:rgba(47,111,237,.14)}
+.ln.cur .n{color:var(--c-str)}
+.ln.cur .n::before{content:'+';margin-right:6px;font-weight:700}
+.ln.now .tx::after{content:'   ← linha nova';color:var(--c-sel);font:600 11px var(--f-b);letter-spacing:.02em}
+.tx mark{background:rgba(255,196,0,.38);color:inherit;border-radius:3px;padding:0 2px}
+.ln.now{box-shadow:inset 0 0 0 1px var(--accent);animation:flash 1.2s ease-out;font-weight:500}
+@keyframes flash{0%{background:var(--accent)}100%{background:var(--ed-now)}}
+.ln.now{background:var(--ed-now);border-left-color:var(--accent);opacity:1}
+.ln.sel{background:var(--ed-sel);border-left-color:var(--c-sel);opacity:1}
+.ln:hover{background:var(--ed-sel)}
+.caret{display:inline-block;width:7px;height:15px;background:var(--c-sel);vertical-align:-3px;animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:0}}
+.empty{padding:22px 18px;color:var(--ed-dim);font:400 13px var(--f-b)}
+.t-kw{color:var(--c-kw)} .t-str{color:var(--c-str)} .t-prop{color:var(--c-prop)} .t-sel{color:var(--c-sel)} .t-fn{color:var(--c-fn)} .t-num{color:var(--c-num)}
+
+.controls{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:600 14px var(--f-b);border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:9px 14px;border-radius:9px;cursor:pointer}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn:disabled{opacity:.45;cursor:default}
+.hint{font-size:12px;color:var(--muted);margin:0}
+
+.explain{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:190px}
+.explain h2{font-size:19px;line-height:1.25}
+.explain h3{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-family:var(--f-b);font-weight:600}
+.explain p,.explain dd{margin:0}
+.explain dl{margin:0;display:flex;flex-direction:column;gap:8px}
+.explain dt{font:600 12px var(--f-b);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:6px;font:700 12px var(--f-m);letter-spacing:.04em;padding:3px 9px;border-radius:999px;align-self:flex-start}
+.badge.d3{background:var(--d3-bg);color:var(--d3)} .badge.d4{background:var(--d4-bg);color:var(--d4)} .badge.d5{background:var(--d5-bg);color:var(--d5)}
+.fin{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin:12px 0 4px}
+@media (max-width:640px){.fin{grid-template-columns:1fr}}
+.fin h3{font-size:13px;margin:0 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.fin-tela{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.fin-n{font:600 13px var(--f-b);color:var(--muted)}
+.fc{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--hc);border-radius:8px;padding:8px 10px;cursor:default}
+.fc b{display:block;font-family:var(--f-d)} .fc span{font-size:13px} .fc small{display:block;color:var(--muted)}
+.fc i{font:normal 600 11px var(--f-b);border:1px solid var(--line);border-radius:6px;padding:2px 8px;color:var(--bad)}
+.fh-feliz{--hc:#2fbf8a}.fh-tranquilo{--hc:#3498db}.fh-cansado{--hc:#ff6b81}
+.fin-arr{background:var(--ed-bg);color:var(--ed-fg);border-radius:10px;padding:10px 12px;font:400 12.5px/1.6 var(--f-m);overflow-x:auto}
+.fin-arr .fr{white-space:pre-wrap;word-break:break-word;margin-bottom:4px;display:block;border-radius:5px;padding:0 4px;cursor:default}
+.fin-arr .fr.hot,.fc.hot{background:var(--ed-now);outline:2px solid var(--accent)}
+.fc.hot{background:var(--d5-bg)}
+.fin-arr .ix{color:var(--c-num)}
+.snip{margin:0;background:var(--ed-bg);color:var(--ed-fg);border-radius:8px;padding:10px 12px;font:400 13px/1.5 var(--f-m);overflow-x:auto;white-space:pre}
+.where{font-size:13px;color:var(--muted);border-top:1px dashed var(--line);padding-top:10px}
+.where b{color:var(--fg);font-weight:600}
+
+.pvhead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.pvhead h3{font-size:15px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:500 13px var(--f-b);border:0;background:var(--surface);color:var(--muted);padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.pvbox{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden;position:relative}
+#host{transform-origin:top left;position:absolute;left:0;top:0}
+.expect{margin:0;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-size:13px}
+.expect b{font-weight:600}
+.perr{margin:0;font:500 12px var(--f-m);padding:8px 10px;border-radius:8px}
+.perr.ok{color:var(--good)} .perr.bad{color:var(--bad);background:var(--surface);border:1px solid var(--bad)}
+
+.mem{background:var(--ed-bg);color:var(--ed-fg);border-radius:12px;border:1px solid var(--ed-line);padding:12px 14px;font:400 13px/1.6 var(--f-m)}
+.mem[hidden]{display:none}
+.mem h3{font:600 12px var(--f-b);letter-spacing:.07em;text-transform:uppercase;color:var(--ed-dim);margin-bottom:6px}
+.mem .it{display:flex;gap:10px;align-items:baseline;padding-left:14px}
+.mem .it span:last-child{min-width:0;overflow-wrap:anywhere}
+.mem .ix{color:var(--c-num);flex:0 0 28px}
+.mem .none{color:var(--ed-dim);font-family:var(--f-b)}
+.mem .len{margin-top:6px;color:var(--c-sel)}
+.mem .diff{margin-top:8px;padding:7px 10px;border-radius:8px;background:var(--surface);color:var(--bad);border:1px solid var(--bad);font:500 12px var(--f-b)}
+.democtl{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.democtl .btn{padding:6px 12px;font-size:13px}
+.chk{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.acao{margin:0;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--accent);font-size:13px;font-weight:500}
+.acao[hidden],.democtl[hidden]{display:none}
+.parts{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.parts li{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,1fr);gap:4px 12px;align-items:baseline;font-size:14px}
+.parts code{font:500 12px var(--f-m);background:var(--bg);border:1px solid var(--line);padding:2px 7px;border-radius:6px;white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%}
+@media (max-width:560px){.parts li{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:860px){
+  .grid{grid-template-columns:minmax(0,1fr)} .col-l{position:static}
+  .days{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .code{max-height:42vh}
+}
+@media (prefers-reduced-motion:reduce){.caret,.ln.now{animation:none}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Mural Passo a Passo</h1>
+      <p>Veja linha por linha o que foi corrigido no <b>style.css</b> e no <b>script.js</b> do Mural da Turma, para que serve cada linha e em qual dia a turma aprendeu. Na terceira aba, o mural ganha memória com array (Dia 05).</p>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Arquivo">
+      <button class="tab" role="tab" id="tab-css" aria-selected="true"><span>1. O visual</span><small>style.css</small></button>
+      <button class="tab" role="tab" id="tab-js" aria-selected="false"><span>2. O comportamento</span><small>script.js</small></button>
+      <button class="tab" role="tab" id="tab-arr" aria-selected="false"><span>3. A memória</span><small>array</small></button>
+    </div>
+  </header>
+
+  <section class="days" aria-label="Mapa dos dias" id="days"></section>
+  <nav class="steps" id="steps" aria-label="Passos"></nav>
+
+  <div class="grid">
+    <div class="col col-l">
+      <div class="editor">
+        <div class="edhead"><span class="dots"><i></i><i></i><i></i></span><span class="fn" id="fname">style.css</span><span class="pg" id="prog"></span></div>
+        <div class="code" id="code" role="list"></div>
+      </div>
+      <div class="controls">
+        <button class="btn" id="b-prev">← Voltar</button>
+        <button class="btn pri" id="b-next">Próxima linha →</button>
+        <button class="btn" id="b-play">▶ Tocar sozinho</button>
+        <button class="btn" id="b-reset">Recomeçar passo</button>
+      </div>
+      <p class="hint">Dica: use as setas do teclado. Clique em qualquer linha do código para ver a explicação dela.</p>
+    </div>
+    <div class="col col-r">
+      <div class="explain" id="explain" aria-live="polite"></div>
+      <div class="pvhead">
+        <h3>Prévia ao vivo</h3>
+        <div class="seg" role="group" aria-label="Tamanho da tela">
+          <button id="vp-pc" aria-pressed="true">Computador</button>
+          <button id="vp-cel" aria-pressed="false">Celular</button>
+        </div>
+      </div>
+      <div class="democtl" id="democtl" hidden><button class="btn" id="b-demo">▶ Repetir demonstração</button><label class="chk"><input type="checkbox" id="auto" checked> Rodar sozinha a cada linha</label></div>
+      <p class="acao" id="acao" hidden></p>
+      <div class="pvbox" id="pvbox"><div id="host"></div></div>
+      <p class="expect" id="expect"></p>
+      <p class="perr" id="perr" hidden></p>
+      <div class="mem" id="mem" hidden aria-live="polite"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- dados ---------- */
+var FOLD3='Dia03 - CSS Flexbox & Responsividade', FOLD4='Dia04 - JS DOM & Eventos';
+var GEN_CLOSE='Fecha o bloco. As chaves { } mostram onde as regras começam e onde terminam. O editor fecha sozinho para você não esquecer.';
+function L(step,t,why,x){var o={step:step,t:t,why:why};if(x)for(var k in x)o[k]=x[k];return o}
+function C(step,t,of,why,x){var o={step:step,t:t,of:of,why:why||GEN_CLOSE};if(x)for(var k in x)o[k]=x[k];return o}
+
+var CSS={
+  file:'style.css', dia:3, vp:'pc',
+  steps:[
+    {short:'Cabeçalho',title:'Título e botão lado a lado',
+     bad:'Sem Flexbox, o título "Mural da Turma" e o botão Tema ficam um embaixo do outro.',
+     goal:'Ligar o Flexbox no cabeçalho para os dois ficarem na mesma linha, um em cada ponta.',
+     onde:'<b>'+FOLD3+'</b> › style.css, bloco "CARD FLEXÍVEL", e a HQ "Flex e a Vila Empilhada".',
+     expect:'Repare: o título foi para a esquerda e o botão Tema para a direita.'},
+    {short:'Formulário',title:'Nome e Humor lado a lado',
+     bad:'Os campos Nome e Humor ocupam duas linhas e gastam espaço à toa.',
+     goal:'Colocar os dois campos na mesma linha, com um respiro entre eles.',
+     onde:'<b>'+FOLD3+'</b> › style.css, bloco "FORMULÁRIO COM FLEXBOX".',
+     expect:'Nome e Humor agora dividem a mesma linha.'},
+    {short:'Mural',title:'Cards em coluna, com espaço',
+     bad:'Os cards ficam colados uns nos outros, sem espaço entre eles.',
+     goal:'Empilhar os cards em uma coluna e dar um espaço entre eles.',
+     onde:'<b>'+FOLD3+'</b> › style.css, bloco "4. LISTA E CARDS DE TAREFAS".',
+     expect:'Veja o que o display: flex sozinho faz: os cards ficam lado a lado. A linha flex-direction: column coloca um embaixo do outro.'},
+    {short:'Card',title:'Texto à esquerda, Remover à direita',
+     bad:'Dentro de cada card, o texto e o botão Remover ficam empilhados.',
+     goal:'Colocar o texto de um lado e o botão Remover do outro, no meio da altura do card.',
+     onde:'<b>'+FOLD3+'</b> › style.css, bloco "4. LISTA E CARDS DE TAREFAS", e a HQ "Flex e a Vila Empilhada".',
+     expect:'O botão Remover foi para a direita do card.'},
+    {short:'Celular',title:'Empilhar de novo na tela pequena',
+     bad:'No celular, Nome e Humor lado a lado ficam apertados e o cabeçalho também.',
+     goal:'Quando a tela tiver 600px ou menos, voltar a empilhar o formulário e o cabeçalho.',
+     onde:'<b>'+FOLD3+'</b> › style.css, bloco "5. RESPONSIVIDADE (MEDIA QUERIES - CELULAR)".',
+     expect:'A prévia está no modo Celular. Troque para Computador e veja o layout voltar ao normal.'}
+  ],
+  lines:[
+    L(0,'header {','Escolhe quem recebe as regras: a tag <header>, o cabeçalho da página.',{id:'a'}),
+    L(0,'  display: flex;','Liga o Flexbox no PAI. Os filhos (título e botão) deixam de ficar empilhados e viram uma fila.'),
+    L(0,'  justify-content: space-between;','Reparte o espaço livre da fila: o título vai para a ponta esquerda e o botão para a ponta direita.'),
+    L(0,'  align-items: center;','Alinha os dois no meio, na altura. Sem isso, um deles encosta no topo.'),
+    C(0,'}','a'),
+    L(1,'.form-linha {','O ponto no começo indica uma class. .form-linha é a caixa que guarda os campos Nome e Humor.',{id:'b'}),
+    L(1,'  display: flex;','Mesmo truque do cabeçalho: o pai vira flex e os campos filhos passam a ficar lado a lado.'),
+    L(1,'  gap: 12px;','Deixa 12px de espaço entre os campos, sem precisar mexer em margin de cada um.'),
+    C(1,'}','b'),
+    L(2,'.mural {','.mural é a caixa onde os cards dos recados são colocados.',{id:'c'}),
+    L(2,'  display: flex;','Liga o Flexbox. Repare na prévia: por padrão o flex coloca os filhos em FILA, então os cards ficam lado a lado.'),
+    L(2,'  flex-direction: column;','Troca a fila por coluna: um card embaixo do outro, como num mural de recados.'),
+    L(2,'  gap: 12px;','Espaço de 12px entre um card e o próximo.'),
+    C(2,'}','c'),
+    L(3,'.card {','.card é cada recado publicado no mural.',{id:'d'}),
+    L(3,'  display: flex;','O card vira o pai de uma fila: o bloco de texto (.info) e o botão Remover ficam lado a lado.'),
+    L(3,'  justify-content: space-between;','O texto fica na ponta esquerda e o botão Remover na ponta direita.'),
+    L(3,'  align-items: center;','Centraliza o botão na altura do card, mesmo quando o texto tem várias linhas.'),
+    L(3,'  gap: 12px;','Garante um respiro entre o texto e o botão, mesmo se a tela ficar estreita.'),
+    C(3,'}','d'),
+    L(4,'@media (max-width: 600px) {','Pergunta ao navegador: a tela tem 600px de largura ou menos? Se sim, as regras de dentro passam a valer. É assim que o site "se adapta" ao celular.',{id:'m'}),
+    L(4,'  .form-linha {','Dentro do @media, escolhemos de novo a caixa dos campos.',{id:'f'}),
+    L(4,'    flex-direction: column;','Troca a fila por coluna: Nome em cima, Humor embaixo. Cada campo ganha a largura toda.'),
+    L(4,'    gap: 0;','Tira o espaço entre os campos, porque cada campo já tem uma margem embaixo. Assim o espaço não dobra.'),
+    C(4,'  }','f'),
+    L(4,'  header {','Agora o cabeçalho, dentro do mesmo @media.',{id:'h'}),
+    L(4,'    flex-direction: column;','O título fica em cima e o botão Tema embaixo, sem espremer os dois na mesma linha.'),
+    L(4,'    gap: 8px;','Um pequeno espaço de 8px entre o título e o botão.'),
+    C(4,'  }','h'),
+    C(4,'}','m')
+  ]
+};
+
+var JS={
+  file:'script.js', dia:4, vp:'cel',
+  steps:[
+    {short:'Elementos',title:'Chamar os elementos da página',
+     bad:'O JavaScript não enxerga a tela sozinho. Sem pegar os elementos, ele não sabe qual formulário ou qual botão usar.',
+     goal:'Buscar na página os 8 elementos de que vamos precisar e guardar cada um em uma "caixinha" (variável).',
+     onde:'<b>'+FOLD4+'</b> › Script.js, comentário 1 (seleção), e a HQ "Script e a Vila Congelada".',
+     expect:'Nada muda na tela, mas o JavaScript já enxerga os 8 elementos. Clique em Publicar: a página recarrega, porque ainda não escutamos o envio.'},
+    {short:'Envio',title:'Escutar o envio do formulário',
+     bad:'Quando clica em Publicar, o formulário recarrega a página e apaga tudo que estava na tela.',
+     goal:'Ficar de olho no envio e segurar o recarregamento, para podermos decidir o que fazer.',
+     onde:'<b>'+FOLD4+'</b> › Script.js, comentário 2 (submit), e a HQ "Script e a Vila Congelada".',
+     expect:'Com apenas o addEventListener, clicar em Publicar ainda recarrega a página. Quando a linha do preventDefault aparecer, a página fica quieta.'},
+    {short:'Valores',title:'Ler o que a pessoa digitou',
+     bad:'Digitar nos campos não basta: o código precisa ler o texto e guardar em variáveis.',
+     goal:'Pegar o nome, o recado e o humor, já sem espaços sobrando no começo e no fim.',
+     onde:'<b>'+FOLD4+'</b> › Script.js, comentário 2, e a HQ "A Árvore do Dom" (Parte 5, Ações 1 a 8).',
+     expect:'Clique em Publicar: ainda nada visível. Nome, recado e humor já estão guardados em variáveis.'},
+    {short:'Validar',title:'Não deixar publicar vazio',
+     bad:'Sem checagem, dá para publicar um recado sem nome ou sem texto.',
+     goal:'Se nome ou recado estiverem vazios, avisar a pessoa e parar por ali.',
+     onde:'<b>'+FOLD4+'</b> › Script.js (aviso com alert dentro do evento de envio).',
+     expect:'Apague o nome ou o recado e clique em Publicar: aparece o aviso. Com tudo preenchido, ainda não acontece nada.'},
+    {short:'Card',title:'Montar o card na memória',
+     bad:'Os recados não existem no HTML. Cada card precisa ser criado pelo JavaScript.',
+     goal:'Criar o card e as peças de dentro (título, texto, humor) e preencher cada uma com os dados digitados.',
+     onde:'<b>'+FOLD4+'</b> › Script.js, comentário 3 (criar card), e a HQ "A Árvore do Dom".',
+     expect:'Clique em Publicar: o card foi montado na memória, mas ainda não foi colocado na página, então nada aparece.'},
+    {short:'Encaixar',title:'Encaixar as peças e colocar no mural',
+     bad:'As peças criadas estão soltas. Elas só aparecem quando entram dentro de algo que já está na página.',
+     goal:'Encaixar título, texto e humor dentro do card, e o card dentro do mural.',
+     onde:'<b>'+FOLD4+'</b> › Script.js, comentário 4 (appendChild).',
+     expect:'Clique em Publicar: o card aparece no mural. Ainda sem botão Remover e com o contador parado.'},
+    {short:'Remover',title:'Botão Remover',
+     bad:'Quem publicou não consegue apagar um recado errado.',
+     goal:'Criar o botão Remover, ensinar o clique a apagar o card e atualizar o contador.',
+     onde:'<b>'+FOLD4+'</b> › HQ "A Árvore do Dom" (remove e children) e HQ "Script e a Vila Congelada".',
+     expect:'Publique um recado e clique em Remover: o card some.'},
+    {short:'Contador',title:'Contador e formulário limpo',
+     bad:'Depois de publicar, o contador não sobe e o texto continua nos campos.',
+     goal:'Atualizar o contador, limpar o formulário e devolver o cursor para o campo Nome.',
+     onde:'<b>'+FOLD4+'</b> › Script.js, comentário 5 (reset e focus).',
+     expect:'Clique em Publicar: o contador sobe, os campos limpam e o cursor volta para o nome.'},
+    {short:'Limpar e Tema',title:'Botões Limpar e Tema',
+     bad:'Os dois botões do mural ainda não fazem nada.',
+     goal:'Limpar apaga todos os cards; Tema liga e desliga o visual escuro.',
+     onde:'<b>'+FOLD4+'</b> › Script.js (innerHTML) e a HQ "A Árvore do Dom" (classList e toggle).',
+     expect:'Publique alguns recados e use os botões Limpar e Tema.'}
+  ],
+  lines:[
+    L(0,"const form = document.getElementById('form-recado');",'document.getElementById procura na página o elemento que tem esse id. A caixinha form passa a representar o formulário.',{onde:'<b>'+FOLD4+'</b> › Script.js, comentário 1 (seleção).'}),
+    L(0,"const inputNome = document.getElementById('nome');",'Pega o campo onde a pessoa digita o nome.'),
+    L(0,"const selectHumor = document.getElementById('humor');",'Pega a lista de escolha do humor.'),
+    L(0,"const textoMensagem = document.getElementById('mensagem');",'Pega a caixa onde se escreve o recado.'),
+    L(0,"const mural = document.getElementById('mural');",'Pega o mural, o lugar onde os cards vão aparecer.'),
+    L(0,"const contador = document.getElementById('contador');",'Pega o número que mostra quantos recados existem.'),
+    L(0,"const btnLimpar = document.getElementById('btn-limpar');",'Pega o botão Limpar.'),
+    L(0,"const btnTema = document.getElementById('btn-tema');",'Pega o botão Tema.'),
+
+    L(1,"form.addEventListener('submit', function (event) {",'addEventListener significa "fique escutando". Quando o formulário for enviado (submit), a função de dentro roda. O parâmetro event guarda informações sobre o que aconteceu.',{id:'h',onde:'<b>'+FOLD4+'</b> › Script.js, comentário 2 (submit).'}),
+    L(1,'  event.preventDefault();','Por padrão, enviar um formulário recarrega a página e apaga tudo. preventDefault ("impedir o padrão") segura esse recarregamento para o nosso código decidir o que fazer.'),
+
+    L(2,'  const nome = inputNome.value.trim();','.value lê o que foi digitado. .trim() corta os espaços do começo e do fim, para que um nome só com espaços conte como vazio.'),
+    L(2,'  const mensagem = textoMensagem.value.trim();','Mesma ideia para o recado: ler o texto e cortar os espaços sobrando.'),
+    L(2,'  const humor = selectHumor.value;','Lê a opção escolhida (feliz, tranquilo ou cansado). Aqui não precisa de trim, porque o valor vem de uma lista pronta.'),
+
+    L(3,"  if (nome === '' || mensagem === '') {",'Pergunta: o nome está vazio OU o recado está vazio? O símbolo || significa "ou". Se a resposta for sim, entra no bloco.',{id:'i',onde:'<b>'+FOLD4+'</b> › Script.js (validação com alert).'}),
+    L(3,"    alert('Preencha o nome e o recado!');",'Mostra uma janelinha de aviso para a pessoa saber o que faltou.'),
+    L(3,'    return;','Para a função aqui. O código de baixo (criar o card) não roda, então nada é publicado.'),
+    C(3,'  }','i'),
+
+    L(4,"  const card = document.createElement('article');",'createElement cria um elemento novo do zero, na memória. Ele ainda não aparece na página.',{onde:'<b>'+FOLD4+'</b> › Script.js, comentário 3 (criar card).'}),
+    L(4,"  card.classList.add('card', 'humor-' + humor);",'classList.add coloca classes no card. O CSS usa essas classes para pintar: .card dá o formato e .humor-feliz (por exemplo) dá a cor da borda.',{onde:'<b>'+FOLD4+'</b> › HQ "A Árvore do Dom" (classList).'}),
+    L(4,"  const info = document.createElement('div');",'Cria uma caixa para agrupar o texto do recado. É ela que fica de um lado do card.',{onde:'<b>'+FOLD4+'</b> › Script.js, comentário 3 (criar card).'}),
+    L(4,"  info.classList.add('info');",'Dá a class info à caixa, para o CSS poder encontrá-la.',{onde:'<b>'+FOLD4+'</b> › HQ "A Árvore do Dom" (classList).'}),
+    L(4,"  const titulo = document.createElement('h3');",'Cria o título do card, que vai mostrar o nome.',{onde:'<b>'+FOLD4+'</b> › Script.js, comentário 3 (criar card).'}),
+    L(4,'  titulo.textContent = nome;','textContent escreve um texto dentro do elemento. Aqui vai o nome que a pessoa digitou.',{onde:'<b>'+FOLD4+'</b> › HQ "A Árvore do Dom" (textContent).'}),
+    L(4,"  const texto = document.createElement('p');",'Cria o parágrafo que vai mostrar o recado.',{onde:'<b>'+FOLD4+'</b> › Script.js, comentário 3 (criar card).'}),
+    L(4,'  texto.textContent = mensagem;','Escreve o recado dentro do parágrafo.',{onde:'<b>'+FOLD4+'</b> › HQ "A Árvore do Dom" (textContent).'}),
+    L(4,"  const detalhe = document.createElement('small');",'Cria uma linha pequena para mostrar o humor.',{onde:'<b>'+FOLD4+'</b> › Script.js, comentário 3 (criar card).'}),
+    L(4,"  detalhe.textContent = 'Humor: ' + humor;",'Junta o texto "Humor: " com o valor escolhido, usando o sinal +.',{onde:'<b>'+FOLD4+'</b> › HQ "A Árvore do Dom" (textContent).'}),
+
+    L(5,'  info.appendChild(titulo);','appendChild coloca um elemento DENTRO de outro. O título entra na caixa info.',{onde:'<b>'+FOLD4+'</b> › Script.js, comentário 4 (appendChild).'}),
+    L(5,'  info.appendChild(texto);','O parágrafo entra na caixa info, depois do título.'),
+    L(5,'  info.appendChild(detalhe);','A linha do humor entra por último.'),
+    L(5,'  card.appendChild(info);','A caixa info, já completa, entra dentro do card.'),
+    L(5,'  mural.appendChild(card);','Agora sim: o card entra no mural, que já está na página. É neste momento que ele aparece na tela.'),
+
+    L(6,"  const btnRemover = document.createElement('button');",'Cria o botão Remover.',{onde:'<b>'+FOLD4+'</b> › Script.js, comentário 3 (criar card).'}),
+    L(6,"  btnRemover.type = 'button';",'Avisa que é um botão comum, que não envia formulário.',{onde:'<b>'+FOLD4+'</b> › Script.js, comentário 3 (criar card).'}),
+    L(6,"  btnRemover.textContent = 'Remover';",'Escreve a palavra Remover no botão.',{onde:'<b>'+FOLD4+'</b> › HQ "A Árvore do Dom" (textContent).'}),
+    L(6,"  btnRemover.classList.add('btn-remover');",'Dá ao botão a class btn-remover, que o CSS pinta de vermelho.',{onde:'<b>'+FOLD4+'</b> › HQ "A Árvore do Dom" (classList).'}),
+    L(6,"  btnRemover.addEventListener('click', function () {",'Fica escutando o clique neste botão. Cada card tem o seu botão, e cada botão sabe qual é o seu card.',{id:'r',onde:'<b>'+FOLD4+'</b> › Script.js, comentário 2 (eventos) e HQ "Script e a Vila Congelada".'}),
+    L(6,'    card.remove();','remove() tira o card da página.',{onde:'<b>'+FOLD4+'</b> › HQ "A Árvore do Dom" (remove).'}),
+    L(6,'    contador.textContent = mural.children.length;','children.length conta quantos filhos o mural tem agora, ou seja, quantos cards. O número vai para o contador.',{onde:'<b>'+FOLD4+'</b> › HQ "A Árvore do Dom" (children).'}),
+    C(6,'  });','r'),
+    L(6,'  card.appendChild(btnRemover);','O botão entra no card, ao lado do texto.',{onde:'<b>'+FOLD4+'</b> › Script.js, comentário 4 (appendChild).'}),
+
+    L(7,'  contador.textContent = mural.children.length;','Depois de adicionar o card, conta de novo os cards do mural e atualiza o número na tela. Esta linha aparece 3 vezes no arquivo de propósito: ainda não aprendemos funções.',{onde:'<b>'+FOLD4+'</b> › HQ "A Árvore do Dom" (children).'}),
+    L(7,'  form.reset();','Limpa todos os campos do formulário, prontos para o próximo recado.',{onde:'<b>'+FOLD4+'</b> › Script.js, comentário 5 (reset e focus).'}),
+    L(7,'  inputNome.focus();','Coloca o cursor de volta no campo Nome. Quem vai publicar vários recados não precisa clicar de novo.'),
+    C(1,'});','h','Fecha a função do envio. Tudo que está entre a abertura (addEventListener) e este fechamento roda quando o formulário é enviado.'),
+
+    L(8,"btnLimpar.addEventListener('click', function () {",'Escuta o clique no botão Limpar.',{id:'l',onde:'<b>'+FOLD4+'</b> › Script.js, comentário 2 (eventos).'}),
+    L(8,"  mural.innerHTML = '';",'innerHTML é o conteúdo do mural em forma de HTML. Trocar por vazio apaga todos os cards de uma vez.',{onde:'<b>'+FOLD4+'</b> › Script.js (innerHTML).'}),
+    L(8,'  contador.textContent = mural.children.length;','Zera o contador: o mural ficou com 0 filhos.',{onde:'<b>'+FOLD4+'</b> › HQ "A Árvore do Dom" (children).'}),
+    C(8,'});','l'),
+    L(8,"btnTema.addEventListener('click', function () {",'Escuta o clique no botão Tema.',{id:'t',onde:'<b>'+FOLD4+'</b> › Script.js, comentário 2 (eventos).'}),
+    L(8,"  document.body.classList.toggle('escuro');",'toggle significa "liga e desliga". Se o body não tem a class escuro, coloca; se tem, tira. O CSS cuida das cores.',{onde:'<b>'+FOLD4+'</b> › HQ "A Árvore do Dom" (classList e toggle).'}),
+    C(8,'});','t')
+  ]
+};
+
+var FOLD5='Dia05 - JS Arrays, Objetos & Renderização';
+var B4='Já veio do Dia 04. Não mudou.';
+var O4='<b>'+FOLD4+'</b> › Script.js e HQs do Dia 04.';
+var O5='<b>'+FOLD5+'</b> › HQ "A Estante em Treino", Parte 1 (vocabulário).';
+function A4(step,t,why,x){var o={dia:4,onde:O4};if(x)for(var k in x)o[k]=x[k];return L(step,t,why,o)}
+function A5(step,t,why,x){var o={dia:5,onde:O5};if(x)for(var k in x)o[k]=x[k];return L(step,t,why,o)}
+var ARR={
+  file:'script.js', dia:5, vp:'cel',
+  steps:[
+    {short:"Memória",title:"Criar a memória do mural",
+     bad:"No Dia 04, a única \"memória\" do mural é a própria tela. O código não sabe quantos recados existem nem quais são.",
+     goal:"Criar um array vazio chamado recados: a lista onde o app vai guardar tudo.",
+     onde:O5,expect:"Nada muda na tela, mas olhe o painel Memória: agora existe uma lista, e ela está vazia."},
+    {short:"Guardar",title:"Guardar cada recado com push",
+     bad:"Publicar só desenha um card. Nada fica guardado em lugar nenhum.",
+     goal:"Guardar cada recado como uma ficha (nome, mensagem e humor) dentro do array.",
+     onde:O5+' Veja "Push" e "Objeto".',expect:"Publique: o card aparece e uma ficha entra na Memória. Depois clique em Remover: o card some da tela, mas a ficha continua na memória. Tela e memória ficaram diferentes."},
+    {short:"Função",title:"Criar a função que vai desenhar o mural",
+     bad:"Os recados já vão para o array, mas a tela é desenhada por outro código, dentro do envio do formulário, que só roda quando o botão Publicar é clicado e não olha o array. Por isso tela e memória podem ficar diferentes.",
+     goal:"Criar a função mostrarRecados, que mostra na tela o conteúdo do array: apaga o mural, percorre o array com forEach e atualiza o contador. Neste passo vai só o esqueleto; o miolo (o desenho do card) vem no próximo.",
+     onde:O5+' Veja "Renderizar".',expect:"A tela continua igual: a função existe, mas está vazia por dentro e ninguém chamou ela."},
+    {short:"Mover",title:"Recortar e colar o desenho do card",
+     bad:"O código que cria o card ainda está no envio do formulário, e só roda quando o botão Publicar é clicado. Ele precisa ir para dentro da função, no forEach.",
+     goal:"Recortar (Ctrl+X) o bloco que cria o card, do const card até o mural.appendChild(card), e colar (Ctrl+V) dentro do forEach. Nenhuma linha nova: só mudou de lugar.",
+     onde:O4,expect:"Publique: agora nada aparece na tela, porque o código que desenhava o card saiu do envio. Ele está dentro da função, que ainda não foi chamada."},
+    {short:"Trocar",title:"Trocar quatro palavras",
+     bad:"O código colado ainda usa nome, mensagem e humor, variáveis que só existem no envio. Dentro da função elas não existem.",
+     goal:"Trocar nome, mensagem e humor por recado.nome, recado.mensagem e recado.humor: os dados agora vêm da ficha. São só quatro trocas (marcadas em amarelo).",
+     onde:O5+' Veja "Objeto".',expect:"A tela continua sem desenhar. Só a função mudou: agora ela sabe ler os dados da ficha."},
+    {short:"Chamar",title:"Chamar a função no envio",
+     bad:"A função está pronta, mas ninguém chama ela: o envio não desenha mais nada.",
+     goal:"Chamar mostrarRecados() logo depois do push.",
+     onde:O5,expect:"Publique: o card volta a aparecer, agora desenhado a partir do array. Mas o Remover só tira o card da tela, e o Limpar deixa a memória cheia."},
+    {short:"Remover",title:"Remover pelo array com splice",
+     bad:"O botão Remover tira só o card da tela. O array não fica sabendo qual ficha sumiu.",
+     goal:"Usar a posicao da ficha e o splice para tirá-la do array, e depois desenhar o mural de novo.",
+     onde:'<b>'+FOLD5+'</b> › HQ "A Estante em Treino" (splice e índice).',expect:"Publique 3 recados e remova o do meio: o card some, o contador desce e a Memória acompanha."},
+    {short:"Limpar",title:"Limpar esvaziando o array",
+     bad:"O botão Limpar apaga só os cards da tela. A memória continua cheia.",
+     goal:"Esvaziar o array com recados.length = 0 e desenhar o mural de novo.",
+     onde:O5+' Veja "Tamanho / length".',expect:"Publique alguns recados e clique em Limpar: tela e memória esvaziam juntas."},
+    {short:"1ª tela",title:"Desenhar ao abrir a página",
+     bad:"Ao abrir a página, nada desenha o mural a partir do array.",
+     goal:"Chamar mostrarRecados() uma vez no final, para o mural e o contador já nascerem do array.",
+     onde:O5,expect:"A página abre com o mural vazio e o contador em 0, tudo vindo do array."}
+  ],
+  lines:[
+    A4(-1,"const form = document.getElementById('form-recado');",B4),
+    A4(-1,"const inputNome = document.getElementById('nome');",B4),
+    A4(-1,"const selectHumor = document.getElementById('humor');",B4),
+    A4(-1,"const textoMensagem = document.getElementById('mensagem');",B4),
+    A4(-1,"const mural = document.getElementById('mural');",B4),
+    A4(-1,"const contador = document.getElementById('contador');",B4),
+    A4(-1,"const btnLimpar = document.getElementById('btn-limpar');",B4),
+    A4(-1,"const btnTema = document.getElementById('btn-tema');",B4),
+    A5(0,"const recados = [];","Cria um ARRAY: uma lista que guarda várias coisas em ordem. Os colchetes [ ] vazios significam \"lista vazia\". É a gaveta onde o mural vai guardar os recados.",{flag:'mem'}),
+    A5(2,"function mostrarRecados() {","function cria uma \"receita com nome\": um bloco de código guardado para usarmos quando quisermos. O nome desta receita é mostrarRecados (mostrar + recados): ela vai mostrar na tela os recados que estão no array, desenhando o mural inteiro.",{id:'fn',flag:'fn'}),
+    A4(2,"  mural.innerHTML = '';","Apaga todos os cards da tela antes de desenhar. Assim nunca desenhamos o mesmo card duas vezes."),
+    A5(2,"  recados.forEach(function (recado, posicao) {","forEach significa \"para cada\". Para CADA ficha do array, o código de dentro roda uma vez. recado é a ficha da vez e posicao é o número do espaço dela (0, 1, 2...), como num inventário de jogo. Vamos usar a posição mais adiante.",{id:'fe'}),
+    A5(3,"    const card = document.createElement('article');","Ctrl+X no bloco inteiro que cria o card (do const card até o mural.appendChild(card)) e Ctrl+V aqui dentro do forEach. Agora, para cada ficha, o código roda uma vez e desenha um card. Nenhuma linha foi inventada: é o mesmo código do Dia 04, só mudou de lugar. Ele ainda usa nome, mensagem e humor, e no próximo passo vamos arrumar isso.",{grp:'mv'}),
+    A4(3,"    card.classList.add('card', 'humor-' + humor);","Igual ao Dia 04.",{grp:'mv',gone:[4,1]}),
+    A5(4,"    card.classList.add('card', 'humor-' + recado.humor);","Troca humor por recado.humor: o humor agora vem da ficha da vez, e não mais da variável do envio.",{mark:"recado.humor",onde:O4+' Veja o Script.js do Dia 04 (o código é o mesmo).'}),
+    A4(3,"    const info = document.createElement('div');","Igual ao Dia 04.",{grp:'mv'}),
+    A4(3,"    info.classList.add('info');","Igual ao Dia 04.",{grp:'mv'}),
+    A4(3,"    const titulo = document.createElement('h3');","Igual ao Dia 04.",{grp:'mv'}),
+    A4(3,"    titulo.textContent = nome;","Igual ao Dia 04.",{grp:'mv',gone:[4,2]}),
+    A5(4,"    titulo.textContent = recado.nome;","Troca nome por recado.nome. Ponto e o nome da informação: \"ficha.nome\" lê o nome guardado na ficha.",{mark:"recado.nome",onde:O4+' Veja o Script.js do Dia 04 (o código é o mesmo).'}),
+    A4(3,"    const texto = document.createElement('p');","Igual ao Dia 04.",{grp:'mv'}),
+    A4(3,"    texto.textContent = mensagem;","Igual ao Dia 04.",{grp:'mv',gone:[4,3]}),
+    A5(4,"    texto.textContent = recado.mensagem;","Troca mensagem por recado.mensagem: lê a mensagem guardada na ficha.",{mark:"recado.mensagem",onde:O4+' Veja o Script.js do Dia 04 (o código é o mesmo).'}),
+    A4(3,"    const detalhe = document.createElement('small');","Igual ao Dia 04.",{grp:'mv'}),
+    A4(3,"    detalhe.textContent = 'Humor: ' + humor;","Igual ao Dia 04.",{grp:'mv',gone:[4,4]}),
+    A5(4,"    detalhe.textContent = 'Humor: ' + recado.humor;","Troca humor por recado.humor, mais uma vez. Quarta e última troca.",{mark:"recado.humor",onde:O4+' Veja o Script.js do Dia 04 (o código é o mesmo).'}),
+    A4(3,"    info.appendChild(titulo);","Igual ao Dia 04.",{grp:'mv'}),
+    A4(3,"    info.appendChild(texto);","Igual ao Dia 04.",{grp:'mv'}),
+    A4(3,"    info.appendChild(detalhe);","Igual ao Dia 04.",{grp:'mv'}),
+    A4(3,"    const btnRemover = document.createElement('button');","Igual ao Dia 04.",{grp:'mv'}),
+    A4(3,"    btnRemover.type = 'button';","Igual ao Dia 04.",{grp:'mv'}),
+    A4(3,"    btnRemover.textContent = 'Remover';","Igual ao Dia 04.",{grp:'mv'}),
+    A4(3,"    btnRemover.classList.add('btn-remover');","Igual ao Dia 04.",{grp:'mv'}),
+    A4(3,"    btnRemover.addEventListener('click', function () {","Igual ao Dia 04.",{grp:'mv',id:'rmP',flag:'pastedrm'}),
+    A4(3,"      card.remove();","Igual ao Dia 04.",{grp:'mv',gone:[6,1]}),
+    A4(3,"      contador.textContent = mural.children.length;","Igual ao Dia 04.",{grp:'mv',gone:[6,1]}),
+    A5(6,"      recados.splice(posicao, 1);","splice remove itens do array. Aqui: \"a partir da posição posicao, tire 1 item\". A ficha some da memória.",{flag:'splice',onde:'<b>'+FOLD5+'</b> › HQ "A Estante em Treino" (splice).'}),
+    A5(6,"      mostrarRecados();","Depois de mudar o array, desenha o mural de novo. Assim a tela sempre mostra o que está na memória."),
+    C(3,"    });",'rmP',undefined,{grp:'mv'}),
+    A4(3,"    card.appendChild(info);","Igual ao Dia 04.",{grp:'mv'}),
+    A4(3,"    card.appendChild(btnRemover);","Igual ao Dia 04.",{grp:'mv'}),
+    A4(3,"    mural.appendChild(card);","Igual ao Dia 04.",{grp:'mv'}),
+    C(2,"  });","fe"),
+    A5(2,"  contador.textContent = recados.length;","length diz quantos itens o array tem agora. Sem parênteses. O número vai para o contador. Antes, esta mesma linha era copiada em 3 lugares. Agora existe uma só, aqui dentro.",{flag:'fnlen',onde:'<b>'+FOLD5+'</b> › HQ "A Estante em Treino", Parte 1 ("Tamanho / length").'}),
+    C(2,"}","fn"),
+    A4(-1,"form.addEventListener('submit', function (event) {",B4,{id:'h'}),
+    A4(-1,"  event.preventDefault();",B4),
+    A4(-1,"  const nome = inputNome.value.trim();",B4),
+    A4(-1,"  const mensagem = textoMensagem.value.trim();",B4),
+    A4(-1,"  const humor = selectHumor.value;",B4),
+    A4(-1,"  if (nome === '' || mensagem === '') {",B4,{id:'i'}),
+    A4(-1,"    alert('Preencha o nome e o recado!');",B4),
+    A4(-1,"    return;",B4),
+    C(-1,"  }","i"),
+    A5(1,"  recados.push({ nome: nome, mensagem: mensagem, humor: humor });","push coloca um item NO FINAL do array. O item é uma \"ficha\" entre chaves { }, com três informações juntas: nome, mensagem e humor. A cada publicação, uma ficha nova entra na lista.",{flag:'push',onde:O5+' Veja "Push" e "Objeto".'}),
+    A4(-1,"  const card = document.createElement('article');",B4,{gone:[3,1]}),
+    A4(-1,"  card.classList.add('card', 'humor-' + humor);",B4,{gone:[3,1]}),
+    A4(-1,"  const info = document.createElement('div');",B4,{gone:[3,1]}),
+    A4(-1,"  info.classList.add('info');",B4,{gone:[3,1]}),
+    A4(-1,"  const titulo = document.createElement('h3');",B4,{gone:[3,1]}),
+    A4(-1,"  titulo.textContent = nome;",B4,{gone:[3,1]}),
+    A4(-1,"  const texto = document.createElement('p');",B4,{gone:[3,1]}),
+    A4(-1,"  texto.textContent = mensagem;",B4,{gone:[3,1]}),
+    A4(-1,"  const detalhe = document.createElement('small');",B4,{gone:[3,1]}),
+    A4(-1,"  detalhe.textContent = 'Humor: ' + humor;",B4,{gone:[3,1]}),
+    A4(-1,"  info.appendChild(titulo);",B4,{gone:[3,1]}),
+    A4(-1,"  info.appendChild(texto);",B4,{gone:[3,1]}),
+    A4(-1,"  info.appendChild(detalhe);",B4,{gone:[3,1]}),
+    A4(-1,"  const btnRemover = document.createElement('button');",B4,{gone:[3,1]}),
+    A4(-1,"  btnRemover.type = 'button';",B4,{gone:[3,1]}),
+    A4(-1,"  btnRemover.textContent = 'Remover';",B4,{gone:[3,1]}),
+    A4(-1,"  btnRemover.classList.add('btn-remover');",B4,{gone:[3,1]}),
+    A4(-1,"  btnRemover.addEventListener('click', function () {","Escuta o clique no Remover. Aqui só tirava o card da tela.",{id:'rm0',flag:'oldrm',gone:[3,1]}),
+    A4(-1,"    card.remove();","Tira o card da TELA. Repare: só da tela. O array não fica sabendo.",{gone:[3,1]}),
+    A4(-1,"    contador.textContent = mural.children.length;","Conta os cards da tela.",{gone:[3,1]}),
+    C(-1,'  });','rm0'),
+    A4(-1,"  card.appendChild(info);",B4,{gone:[3,1]}),
+    A4(-1,"  card.appendChild(btnRemover);",B4,{gone:[3,1]}),
+    A4(-1,"  mural.appendChild(card);","Coloca o card na tela. Aqui o card era criado direto, sem passar pelo array.",{flag:'oldadd',gone:[3,1]}),
+    A4(-1,"  contador.textContent = mural.children.length;","Contava os cards da tela. Esta linha não vai junto no recorte: a função já tem a sua, no final.",{gone:[3,1]}),
+    A5(5,"  mostrarRecados();","Chama a função que desenha o mural. A tela passa a ser desenhada a partir do array.",{flag:'call'}),
+    A4(-1,"  form.reset();",B4),
+    A4(-1,"  inputNome.focus();",B4),
+    C(-1,"});","h"),
+    A4(-1,"btnLimpar.addEventListener('click', function () {",B4,{id:'l'}),
+    A4(-1,"  mural.innerHTML = '';","Apagava os cards da tela. O array não ficava sabendo.",{gone:[7,1]}),
+    A4(-1,"  contador.textContent = mural.children.length;","Contava os cards da tela.",{gone:[7,1]}),
+    A5(7,"  recados.length = 0;","length também pode ser mudado: dizer que a lista tem 0 itens esvazia o array de uma vez.",{flag:'limpaArr',onde:O5+' Veja "Tamanho / length".'}),
+    A5(7,"  mostrarRecados();","Desenha o mural de novo, agora vazio. O contador volta a 0 pela função."),
+    C(-1,"});","l"),
+    A4(-1,"btnTema.addEventListener('click', function () {",B4,{id:'t'}),
+    A4(-1,"  document.body.classList.toggle('escuro');",B4),
+    C(-1,"});","t"),
+    A5(8,"mostrarRecados();","Chama a função uma vez quando a página abre. O mural e o contador já nascem do array.",{flag:'init'})
+
+  ]
+};
+
+var TABS={css:CSS,js:JS,arr:ARR};
+
+/* ---------- prévia: HTML e CSS de base ---------- */
+var BASE_CSS=[
+':host{display:block}',
+'.vp{container-type:inline-size;width:100%}',
+'.frame{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f3f6fb;color:#1f2a37;font-size:14px;line-height:1.4;position:relative;min-height:100%}',
+'.frame.escuro{background:#1b2230;color:#e8edf5}',
+'header{padding:14px 16px;background:#3498db;color:#fff}',
+'header h1{margin:0;font-size:18px}',
+'header button{background:#fff;color:#2b7fb8}',
+'main{padding:12px 14px;display:block}',
+'.caixa{background:#fff;border-radius:10px;padding:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.12)}',
+'.escuro .caixa{background:#263043}',
+'.campo{display:flex;flex-direction:column;margin-bottom:12px;flex:1}',
+'label{font-weight:600;font-size:12px;margin-bottom:4px}',
+'input,select,textarea{font:inherit;padding:8px;border:1px solid #c7d2e0;border-radius:6px;width:100%;box-sizing:border-box;background:#fff;color:#1f2a37}',
+'textarea{min-height:52px;resize:none}',
+'button{font:inherit;border:0;border-radius:6px;padding:8px 12px;background:#2fbf8a;color:#fff;cursor:pointer}',
+'.topo-mural{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}',
+'.topo-mural h2{margin:0;font-size:16px}',
+'.card{background:#eef3fb;border-left:8px solid #3498db;border-radius:8px;padding:10px 12px;color:#1f2a37;margin:0}',
+'.escuro .card{background:#2e3a52;color:#e8edf5}',
+'.card h3{margin:0 0 2px;font-size:15px}',
+'.card p{margin:0 0 2px;overflow-wrap:anywhere}',
+'.card small{opacity:.7}',
+'.humor-feliz{border-left-color:#2fbf8a}.humor-tranquilo{border-left-color:#3498db}.humor-cansado{border-left-color:#ff6b81}',
+'.btn-remover{background:#ff6b81}',
+'.pulse{outline:3px solid #ff9f1c;outline-offset:2px}',
+'.toast{position:absolute;left:12px;right:12px;bottom:12px;background:#1f2a37;color:#fff;padding:10px 12px;border-radius:8px;font-size:13px;z-index:5}',
+'.reload{position:absolute;inset:0;background:#fff;color:#b3261e;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;padding:24px;z-index:9}'
+].join('\n');
+
+function pvHtml(withCards){
+  var cards = withCards ?
+   '<article class="card humor-feliz"><div class="info"><h3>Ana</h3><p>Bom dia, turma!</p><small>Humor: feliz</small></div><button class="btn-remover" type="button">Remover</button></article>'+
+   '<article class="card humor-tranquilo"><div class="info"><h3>Bruno</h3><p>Quem faz o HTML hoje?</p><small>Humor: tranquilo</small></div><button class="btn-remover" type="button">Remover</button></article>' : '';
+  return '<div class="vp"><div class="frame">'+
+   '<header><h1>Mural da Turma</h1><button type="button" data-id="btn-tema">Tema</button></header>'+
+   '<main><section class="caixa"><form data-id="form-recado" novalidate>'+
+     '<div class="form-linha">'+
+       '<div class="campo"><label>Nome</label><input data-id="nome" value="Ana"></div>'+
+       '<div class="campo"><label>Humor</label><select data-id="humor"><option value="feliz">Feliz</option><option value="tranquilo">Tranquilo</option><option value="cansado">Cansado</option></select></div>'+
+     '</div>'+
+     '<div class="campo"><label>Recado</label><textarea data-id="mensagem">Bom dia, turma!</textarea></div>'+
+     '<button type="submit">Publicar</button></form></section>'+
+   '<section class="caixa"><div class="topo-mural"><h2>Mural</h2><span><b data-id="contador">'+(withCards?'2':'0')+'</b> recados</span><button type="button" data-id="btn-limpar">Limpar</button></div>'+
+     '<div class="mural" data-id="mural">'+cards+'</div></section></main></div></div>';
+}
+
+/* ---------- estado ---------- */
+var S={tab:'css',step:0,rev:0,sel:null,typing:null,playing:false,vp:'pc'};
+var timers={type:null,play:null,reload:null};
+var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+var $=function(id){return document.getElementById(id)};
+function T(){return TABS[S.tab]}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+/* ---------- ajuda: linhas visíveis ---------- */
+function unitOf(tab,step){
+  var u=[],cnt=0,g={};
+  tab.lines.forEach(function(l,i){
+    if(l.of||l.step!==step){u[i]=0;return}
+    if(l.grp){if(!g[l.grp])g[l.grp]=++cnt;u[i]=g[l.grp]}else u[i]=++cnt;
+  });
+  u.total=cnt;return u;
+}
+function stepCount(tab,step){return unitOf(tab,step).total}
+function visibility(tab,step,rev){
+  var vis=[],byId={},u=unitOf(tab,step);
+  tab.lines.forEach(function(l,i){
+    if(l.of){vis[i]=false;return}
+    if(l.id)(byId[l.id]=byId[l.id]||[]).push(i);
+    var v;
+    if(l.step<step)v=true;
+    else if(l.step===step){v=u[i]<=rev}
+    else v=false;
+    if(v&&l.gone&&(step>l.gone[0]||(step===l.gone[0]&&rev>=l.gone[1])))v=false;
+    vis[i]=v;
+  });
+  tab.lines.forEach(function(l,i){if(l.of)vis[i]=byId[l.of].some(function(j){return vis[j]})});
+  return vis;
+}
+function newestIdx(tab,step,rev){
+  var u=unitOf(tab,step),found=null;
+  for(var i=0;i<u.length;i++){if(u[i]===rev&&rev>0){found=i;break}}
+  return found;
+}
+function newestSet(tab,step,rev){
+  var u=unitOf(tab,step),set={};
+  u.forEach(function(n,i){if(n===rev&&rev>0)set[i]=true});
+  return set;
+}
+
+/* ---------- destaque de sintaxe ---------- */
+function hl(src,lang){
+  var s=esc(src);
+  if(lang==='css'){
+    if(/\{\s*$/.test(s)){
+      return s.replace(/^(\s*)(@media)(.*)$/,'$1<span class="t-kw">$2</span>$3').replace(/^(\s*)(?!<)([^<{]+?)(\s*\{)$/,'$1<span class="t-sel">$2</span>$3');
+    }
+    var m=s.match(/^(\s*)([a-z-]+)(:)(.*)$/);
+    if(m){return m[1]+'<span class="t-prop">'+m[2]+'</span>'+m[3]+m[4].replace(/\b(\d+(?:px)?)\b/g,'<span class="t-num">$1</span>').replace(/\b(flex|column|center|space-between)\b/g,'<span class="t-str">$1</span>')}
+    return s;
+  }
+  return s.replace(/('[^']*'?)|\b(const|function|return|if)\b|(\.[A-Za-z]+)(?=\()|(\.[A-Za-z]+)|\b(\d+)\b/g,function(a,str,kw,fn,pr,num){
+    if(str)return '<span class="t-str">'+str+'</span>';
+    if(kw)return '<span class="t-kw">'+kw+'</span>';
+    if(fn)return '<span class="t-fn">'+fn+'</span>';
+    if(pr)return '<span class="t-prop">'+pr+'</span>';
+    if(num)return '<span class="t-num">'+num+'</span>';
+    return a;
+  });
+}
+
+/* ---------- desenho do código ---------- */
+function markHl(text,l,lang){
+  if(l.mark&&text===l.t){
+    var k=text.indexOf(l.mark);
+    if(k>-1)text=text.slice(0,k)+'\u0001'+l.mark+'\u0002'+text.slice(k+l.mark.length);
+  }
+  var h=hl(text,lang);
+  return h.replace(/\u0001/g,'<mark>').replace(/\u0002/g,'</mark>');
+}
+function renderCode(){
+  var tab=T(),vis=visibility(tab,S.step,S.rev),box=$('code'),html='',n=0,newest=newestSet(tab,S.step,S.rev);
+  tab.lines.forEach(function(l,i){
+    if(!vis[i])return;
+    n++;
+    var text=l.t,caret='';
+    if(S.typing&&S.typing.idx===i){text=l.t.slice(0,S.typing.len);caret='<span class="caret"></span>'}
+    var cls='ln'+(l.step<S.step?' old':'')+(l.step===S.step&&l.step>=0?' cur':'')+(newest[i]&&S.sel===null?' now':'')+(i===S.sel?' sel':'');
+    html+='<button class="'+cls+'" data-i="'+i+'" role="listitem"><span class="n">'+n+'</span><span class="tx">'+markHl(text,l,S.tab)+caret+'</span></button>';
+  });
+  if(!html)html='<div class="empty">O arquivo '+tab.file+' está vazio. Aperte <b>Próxima linha</b> para escrever a primeira.</div>';
+  box.innerHTML=html;
+  var focus=box.querySelector('.sel')||box.querySelector('.now')||box.lastElementChild;
+  if(focus){var bb=box.getBoundingClientRect(),fb=focus.getBoundingClientRect();box.scrollTop=Math.max(0,box.scrollTop+(fb.top-bb.top)-box.clientHeight/2+fb.height/2)}
+  var total=tab.steps.length;
+  $('prog').textContent='Passo '+(S.step+1)+' de '+total+' · linha '+S.rev+'/'+stepCount(tab,S.step);
+}
+
+/* ---------- passos e mapa dos dias ---------- */
+function renderSteps(){
+  var tab=T();
+  $('steps').innerHTML=tab.steps.map(function(st,i){
+    var cls='chip'+(i===S.step?' cur':'')+(i<S.step||(i===S.step&&S.rev>=stepCount(tab,i))?' done':'');
+    return '<button class="'+cls+'" data-s="'+i+'"><i>'+(i<S.step?'✓':i+1)+'</i>'+esc(st.short)+'</button>';
+  }).join('');
+  var cur=$('steps').querySelector('.cur');if(cur&&cur.scrollIntoView)cur.scrollIntoView({block:'nearest',inline:'center'});
+}
+var DAYS=[
+ ['Dia 01','HTML5 estrutural','Já vem pronto no index.html',null],
+ ['Dia 02','CSS básico e Box Model','Cores e caixas já vêm prontas',null],
+ ['Dia 03','Flexbox e Responsividade','Usado no style.css','css'],
+ ['Dia 04','JS DOM e Eventos','Usado no script.js','js'],
+ ['Dia 05','Arrays e Objetos','Usado na aba 3, a memória','arr']
+];
+function renderDays(){
+  $('days').innerHTML=DAYS.map(function(d,i){
+    var on=d[3]?' on d'+(i+1):'';var act=d[3]&&d[3]===S.tab?' act':'';
+    var tag=d[3]?'button':'div';
+    return '<'+tag+' class="day'+on+act+'"'+(d[3]?' data-go="'+d[3]+'"':'')+'><b>'+d[0]+'</b><span>'+d[1]+'</span><span>'+d[2]+'</span></'+tag+'>';
+  }).join('');
+}
+
+/* ---------- explicação ---------- */
+function badge(dia){return '<span class="badge d'+dia+'">Aprendemos no Dia 0'+dia+'</span>'}
+
+/* ---------- explicação por partes ---------- */
+var EVT={click:'um clique',submit:'o envio do formulário (clicar em Publicar)'};
+function descVal(v){
+  var m;
+  v=v.trim();
+  if((m=/^'(.*)'$/.exec(v)))return 'o texto fixo "'+m[1]+'"';
+  if((m=/^'(.*)' \+ (.+)$/.exec(v)))return 'junta o texto "'+m[1]+'" com '+descVal(m[2]);
+  if((m=/^(\w+)\.children\.length$/.exec(v)))return 'a quantidade de filhos de '+m[1]+', ou seja, quantos cards existem na tela';
+  if((m=/^(\w+)\.length$/.exec(v)))return 'a quantidade de itens do array '+m[1];
+  if((m=/^(recado|tarefa)\.(\w+)$/.exec(v)))return 'o campo '+m[2]+' da ficha '+m[1];
+  if(/^\w+$/.test(v))return 'o valor guardado na variável '+v;
+  return 'o valor '+v;
+}
+function explainLine(l,tab){
+  var t=l.t.trim(),m,P=[],W=null;
+  if(tab==='css'){
+    if((m=/^(.*) \{$/.exec(t))){
+      if(/^@media/.test(t)){P=[[m[1],'a pergunta: a tela tem no máximo 600px de largura?'],['{','abre as regras que só valem se a resposta for sim']]}
+      else P=[[m[1],'o seletor: escolhe quem vai receber as regras. Ponto no começo = class; sem ponto = a tag'],['{','abre o bloco de regras']];
+      return {why:null,parts:P};
+    }
+    if((m=/^([a-z-]+): (.*);$/.exec(t)))return {why:null,parts:[[m[1],'a propriedade: o que vamos mudar'],[m[2],'o valor: como vai ficar'],[';','fim da regra']]};
+    if(/^\}$/.test(t))return {why:null,parts:[['}','fecha o bloco']]};
+    return {why:null,parts:[]};
+  }
+  if((m=/^const (\w+) = document\.getElementById\('([^']+)'\);$/.exec(t))){
+    return {why:'Procura na página o elemento que tem id="'+m[2]+'" e guarda numa variável chamada '+m[1]+'. A partir daqui, escrever '+m[1]+' é o mesmo que apontar para esse elemento.',
+      parts:[['const '+m[1],'cria uma variável (uma caixinha com nome) chamada '+m[1]],['=','guarda dentro dela o que vem do lado direito'],["document.getElementById('"+m[2]+"')",'document é a página inteira; getElementById significa "pegar pelo id"; "'+m[2]+'" é o id que o HTML deu ao elemento'],[';','fim da instrução']]};
+  }
+  if((m=/^const (\w+) = document\.createElement\('(\w+)'\);$/.exec(t))){
+    return {why:'Cria um elemento <'+m[2]+'> novo e guarda na variável '+m[1]+'. Ele nasce solto na memória: ainda não aparece na página.',
+      parts:[['const '+m[1],'cria uma variável chamada '+m[1]+', que vai guardar o elemento novo'],['=','guarda dentro dela o que vem do lado direito'],["document.createElement('"+m[2]+"')",'pede à página para criar um elemento <'+m[2]+'> do zero'],[';','fim da instrução']]};
+  }
+  if((m=/^(\w+)\.classList\.add\((.*)\);$/.exec(t))){
+    var P2=[[m[1],'o elemento que vai receber a class'],['.classList','a lista de classes desse elemento'],['.add('+m[2]+')','adiciona à lista o que está entre parênteses']];
+    if(m[2].indexOf('+')>-1)P2.push([m[2].split(',').slice(-1)[0].trim(),'junta pedaços de texto com +: forma o nome da class, como humor-feliz ou humor-cansado']);
+    return {why:'Coloca no elemento '+m[1]+' a(s) class(es) '+m[2].replace(/'/g,'"')+'. O CSS procura por essas classes para saber como desenhar o elemento: é assim que ele ganha formato e cor.',parts:P2};
+  }
+  if((m=/^(\w+)\.textContent = (.*);$/.exec(t))){
+    return {why:'Escreve um texto dentro de '+m[1]+': '+descVal(m[2])+'.',
+      parts:[[m[1],'o elemento que vai receber o texto'],['.textContent','o texto que fica dentro dele'],['=','troca o texto atual pelo valor da direita'],[m[2],descVal(m[2])],[';','fim da instrução']]};
+  }
+  if((m=/^(\w+)\.type = '(\w+)';$/.exec(t)))return {why:'Avisa que '+m[1]+' é um botão comum (type "'+m[2]+'"), que só reage ao clique e não envia nenhum formulário.',
+    parts:[[m[1],'o elemento'],['.type','o tipo do botão'],["= '"+m[2]+"'",'botão comum, sem enviar formulário'],[';','fim da instrução']]};
+  if((m=/^(\w+)\.appendChild\((\w+)\);$/.exec(t))){
+    return {why:'Coloca '+m[2]+' DENTRO de '+m[1]+', no final. '+(m[1]==='mural'?'É aqui que o card finalmente aparece na tela, porque o mural já está na página.':'Elementos soltos só aparecem quando entram dentro de algo que já está na página.'),
+      parts:[[m[1],'o elemento que vai receber (o "pai")'],['.appendChild(','"anexar filho": coloca dentro, no final'],[m[2],'o elemento que será colocado (o "filho")'],[')','fecha o parêntese']]};
+  }
+  if((m=/^(\w+)\.addEventListener\('(\w+)', function \((\w*)\) \{$/.exec(t))){
+    return {why:'Fica escutando: quando acontecer '+(EVT[m[2]]||m[2])+' em '+m[1]+', roda o código que está dentro das chaves.',
+      parts:[[m[1],'quem vai ser vigiado'],['.addEventListener','"ficar escutando um evento"'],["'"+m[2]+"'",'o evento: '+(EVT[m[2]]||m[2])],['function ('+m[3]+') {','abre o bloco de código que roda quando o evento acontece'+(m[3]?'. '+m[3]+' guarda informações sobre o que aconteceu':'')]]};
+  }
+  if((m=/^const (\w+) = (\w+)\.value\.trim\(\);$/.exec(t))){
+    return {why:'Lê o que foi digitado em '+m[2]+' e corta os espaços do começo e do fim. O resultado fica guardado na variável '+m[1]+'.',
+      parts:[['const '+m[1],'cria a variável '+m[1]],['=','guarda nela o que vem da direita'],[m[2],'o campo do formulário'],['.value','o que está escrito nele agora'],['.trim()','"aparar": remove espaços do começo e do fim'],[';','fim da instrução']]};
+  }
+  if((m=/^const (\w+) = (\w+)\.value;$/.exec(t))){
+    return {why:'Lê a opção escolhida em '+m[2]+' e guarda na variável '+m[1]+'.',
+      parts:[['const '+m[1],'cria a variável '+m[1]],['=','guarda nela o que vem da direita'],[m[2],'a lista de escolha'],['.value','a opção que está selecionada agora'],[';','fim da instrução']]};
+  }
+  if(t==='event.preventDefault();')return {why:'Por padrão, enviar um formulário recarrega a página e apaga tudo. preventDefault ("impedir o padrão") segura esse recarregamento, para o nosso código decidir o que fazer.',
+    parts:[['event','guarda informações sobre o que aconteceu (aqui, o envio do formulário)'],['.preventDefault()','"impedir o comportamento padrão": o navegador não recarrega a página'],[';','fim da instrução']]};
+  if((m=/^if \((\w+) === '' \|\| (\w+) === ''\) \{$/.exec(t)))return {why:'Pergunta: o '+m[1]+' está vazio OU o '+m[2]+' está vazio? Se a resposta for sim, entra no bloco.',
+    parts:[['if (','"se": começa uma pergunta'],[m[1]+" === ''",'o valor de '+m[1]+' é igual a vazio? (três sinais de igual comparam)'],['||','"ou": basta uma das duas perguntas ser verdadeira'],[m[2]+" === ''",'o valor de '+m[2]+' é igual a vazio?'],[') {','fecha a pergunta e abre o bloco que roda se a resposta for sim']]};
+  if((m=/^alert\('(.*)'\);$/.exec(t)))return {why:'Mostra uma janelinha de aviso com a mensagem, para a pessoa saber o que faltou.',
+    parts:[['alert(','função do navegador que abre uma janelinha de aviso'],["'"+m[1]+"'",'o texto que aparece na janelinha'],[');','fecha o parêntese e termina a instrução']]};
+  if(t==='return;')return {why:'Encerra a função aqui. As linhas de baixo não rodam, então nada é publicado.',parts:[['return','"sair": para a função neste ponto'],[';','fim da instrução']]};
+  if((m=/^(\w+)\.push\((\{.*\})\);$/.exec(t)))return {why:'push coloca um item NO FINAL do array. O item é uma "ficha" entre chaves { }, com informações juntas. A cada publicação, uma ficha nova entra na lista.',
+    parts:[[m[1],'o array (a lista)'],['.push(','"empurrar": coloca um item no final da lista'],[m[2],'a ficha: um pacote de informações. Cada par é nome-da-informação: valor'],[');','fecha e termina']]};
+  if((m=/^(\w+)\.splice\((\w+), 1\);$/.exec(t)))return {why:'splice remove itens do array. Aqui: "a partir da posição '+m[2]+', tire 1 item". A ficha some da memória.',
+    parts:[[m[1],'o array'],['.splice(','"emendar/cortar": mexe em itens da lista'],[m[2],'a posição (o número do espaço) onde começa o corte; o primeiro espaço é 0'],['1','quantos itens tirar'],[');','fecha e termina']]};
+  if((m=/^(\w+)\.length = 0;$/.exec(t)))return {why:'length também pode ser mudado: dizer que a lista tem 0 itens esvazia o array de uma vez.',
+    parts:[[m[1],'o array'],['.length','quantos itens ele tem'],['= 0','diz que agora são zero: a lista fica vazia'],[';','fim da instrução']]};
+  if((m=/^(\w+)\.forEach\(function \((\w+)(?:, (\w+))?\) \{$/.exec(t)))return {why:'forEach significa "para cada". Para CADA ficha do array, o código de dentro roda uma vez. A cada volta, '+m[2]+' é uma ficha diferente'+(m[3]?' e '+m[3]+' é o número do espaço dela (0, 1, 2...), como num inventário de jogo':'')+'.',
+    parts:[[m[1],'o array'],['.forEach(','"para cada": repete o bloco abaixo para cada item'],['function ('+m[2]+(m[3]?', '+m[3]:'')+') {','o bloco que roda a cada volta. '+m[2]+' = a ficha da vez'+(m[3]?'; '+m[3]+' = a posição dela':'')]]};
+  if((m=/^function (\w+)\(\) \{$/.exec(t)))return {why:'function cria uma "receita com nome": um bloco de código guardado para ser usado quando quisermos. A receita '+m[1]+' desenha a lista na tela.',
+    parts:[['function','"função": começa uma receita'],[m[1],'o nome da receita; usamos esse nome para chamá-la'],['()','sem ingredientes (parâmetros) por enquanto'],['{','abre o bloco com o passo a passo da receita']]};
+  if((m=/^(\w+)\(\);$/.exec(t)))return {why:'Chama a receita '+m[1]+': o código que está dentro dela roda agora.',
+    parts:[[m[1],'o nome da receita'],['()','os parênteses "apertam o botão": executam a receita'],[';','fim da instrução']]};
+  if(t==='const recados = [];'||t==='const tarefas = [];')return {why:'Cria um ARRAY: uma lista que guarda várias coisas em ordem. Os colchetes [ ] vazios significam "lista vazia". É a gaveta onde o app vai guardar tudo.',
+    parts:[['const '+t.split(' ')[1],'cria a variável que vai guardar a lista'],['=','guarda nela o que vem da direita'],['[]','um array vazio: uma lista sem nenhum item ainda'],[';','fim da instrução']]};
+  if((m=/^(\w+)\.innerHTML = '';$/.exec(t)))return {why:'innerHTML é tudo que está dentro de '+m[1]+', em forma de HTML. Trocar por vazio apaga todos os cards da tela de uma vez.',
+    parts:[[m[1],'o elemento'],['.innerHTML','o conteúdo de dentro dele'],["= ''",'troca por um texto vazio: apaga tudo'],[';','fim da instrução']]};
+  if((m=/^(\w+)\.remove\(\);$/.exec(t)))return {why:'remove() tira '+m[1]+' da página.',parts:[[m[1],'o elemento'],['.remove()','"remover": tira o elemento da página'],[';','fim da instrução']]};
+  if((m=/^(\w+)\.reset\(\);$/.exec(t)))return {why:'Limpa todos os campos do formulário, prontos para o próximo recado.',parts:[[m[1],'o formulário'],['.reset()','"restaurar": volta todos os campos ao estado inicial'],[';','fim da instrução']]};
+  if((m=/^(\w+)\.focus\(\);$/.exec(t)))return {why:'Coloca o cursor de volta no campo '+m[1]+'. Quem publica vários recados não precisa clicar de novo.',parts:[[m[1],'o campo'],['.focus()','"dar foco": coloca o cursor piscando dentro dele'],[';','fim da instrução']]};
+  if((m=/^document\.body\.classList\.toggle\('(\w+)'\);$/.exec(t)))return {why:'toggle significa "liga e desliga". Se o body não tem a class '+m[1]+', coloca; se tem, tira. O CSS cuida das cores.',
+    parts:[['document.body','o corpo da página inteira'],['.classList','a lista de classes dele'],[".toggle('"+m[1]+"')",'se a class não está na lista, entra; se está, sai'],[';','fim da instrução']]};
+  if(/^\}\)?;?$/.test(t))return {why:null,parts:[[t,'fecha o bloco aberto acima'+(t.indexOf(')')>-1?'; o ")" e o ";" terminam o addEventListener ou o forEach':'')]]};
+  return {why:null,parts:[]};
+}
+var GENERIC=/Igual ao Dia 04|Já veio do Dia 04/;
+function partsHtml(P){
+  if(!P||!P.length)return '';
+  return '<div><h3>Por partes</h3><ul class="parts">'+P.map(function(p){return '<li><code>'+esc(p[0])+'</code><span>'+esc(p[1])+'</span></li>'}).join('')+'</ul></div>';
+}
+var FIN=[['Ana','Bom dia, turma!','feliz'],['Bruno','Quem faz o HTML hoje?','tranquilo'],['Carla','Segunda-feira de novo...','cansado'],['Davi','Prova na sexta!','cansado']];
+function finalHtml(){
+  var cards=FIN.map(function(r,i){return '<div class="fc fh-'+r[2]+'" data-k="'+i+'" tabindex="0"><div><b>'+esc(r[0])+'</b><span>'+esc(r[1])+'</span><small>Humor: '+r[2]+'</small></div><i>Remover</i></div>'}).join('');
+  var arr=FIN.map(function(r,i){return '<span class="fr" data-k="'+i+'" tabindex="0"><span class="ix">['+i+']</span> {\n      nome: "'+esc(r[0])+'",\n      mensagem: "'+esc(r[1])+'",\n      humor: "'+r[2]+'"\n    }'+(i<FIN.length-1?',':'')+'</span>'}).join('');
+  return '<h3 style="margin-top:14px">Exemplo final: a tela e a memória lado a lado</h3>'+
+   '<div class="fin"><div><h3>Na tela</h3><div class="fin-tela"><div class="fin-n">Recados: '+FIN.length+'</div>'+cards+'</div></div>'+
+   '<div><h3>No array (memória)</h3><div class="fin-arr"><span class="fr">const recados = [</span>'+arr+'<span class="fr">];</span><span class="fr">recados.length = '+FIN.length+'</span></div></div></div>'+
+   '<p class="where">Passe o mouse (ou toque) em um card, ou em uma ficha: o par correspondente acende. Cada card da tela é o desenho de uma ficha do array.</p>';
+}
+function wireFinal(root){
+  var all=root.querySelectorAll('[data-k]');
+  function on(k,v){all.forEach(function(e){if(e.getAttribute('data-k')===k)e.classList.toggle('hot',v)})}
+  all.forEach(function(e){var k=e.getAttribute('data-k');
+    e.addEventListener('mouseenter',function(){on(k,true)});e.addEventListener('mouseleave',function(){on(k,false)});
+    e.addEventListener('focus',function(){on(k,true)});e.addEventListener('blur',function(){on(k,false)});
+    e.addEventListener('click',function(){all.forEach(function(x){x.classList.remove('hot')});on(k,true)});
+  });
+}
+function renderExplain(){
+  var tab=T(),st=tab.steps[S.step],ex=$('explain'),total=tab.steps.length,html;
+  var last=S.step===total-1&&S.rev>=stepCount(tab,S.step);
+  if(S.sel===null&&S.rev===0){
+    html=badge(tab.dia)+'<h2>Passo '+(S.step+1)+' de '+total+': '+esc(st.title)+'</h2>'+
+      '<dl><div><dt>O que estava errado</dt><dd>'+esc(st.bad)+'</dd></div><div><dt>O que vamos fazer</dt><dd>'+esc(st.goal)+'</dd></div></dl>'+
+      '<p class="where">Onde rever: '+st.onde+'</p>';
+  }else{
+    var i=S.sel!==null?S.sel:newestIdx(tab,S.step,S.rev),l=tab.lines[i];
+    var el=explainLine(l,S.tab),why=(el.why&&(GENERIC.test(l.why)||!l.why))?el.why:l.why;
+    html=badge(l.dia||tab.dia)+'<h2>'+(l.step===-1?'Código do Dia 04':'Passo '+(S.step+1)+': '+esc(st.title))+'</h2>'+
+      '<pre class="snip">'+hl(l.t.replace(/^\s+/,function(m){return m}),S.tab)+'</pre>'+
+      '<div><h3>Por que precisamos disso?</h3><p>'+esc(why)+'</p></div>'+partsHtml(el.parts)+
+      '<p class="where">Onde rever: '+(l.onde||st.onde)+'</p>';
+  }
+  if(last){
+    html+= S.tab==='css'
+      ? '<div class="controls"><button class="btn pri" data-go="js">Agora o JavaScript →</button></div>'
+      : S.tab==='js'
+      ? '<p><b>Fim da aba 2.</b> O mural funciona, mas a única memória dele é a tela.</p><div class="controls"><button class="btn pri" data-go="arr">Agora a memória (array) →</button></div>'
+      : '<p><b>Fim.</b> O mural agora tem memória: a tela é sempre desenhada a partir do array. Repare que a linha do contador, antes copiada em 3 lugares, virou uma só. Clique num passo acima para rever qualquer parte.</p>'+finalHtml();
+  }
+  ex.innerHTML=html;
+  if(last&&S.tab==='arr')wireFinal(ex);
+}
+
+/* ---------- prévia ---------- */
+var host=$('host'),box=$('pvbox'),sh=host.attachShadow({mode:'open'}),styleEl=null;
+function fullCss(){return CSS.lines.map(function(l){return l.t}).join('\n')}
+function toContainer(css){return css.replace(/@media/g,'@container')}
+function visibleText(tab){var v=visibility(tab,S.step,S.rev);return tab.lines.filter(function(l,i){return v[i]}).map(function(l){return l.t}).join('\n')}
+function fit(){
+  var W=S.vp==='pc'?640:360, avail=box.clientWidth||W, k=Math.min(1,avail/W);
+  host.style.width=W+'px';host.style.transform='scale('+k+')';
+  host.style.left=Math.max(0,Math.round((avail-W*k)/2))+'px';
+  box.style.height=Math.max(120,Math.round(host.offsetHeight*k))+'px';
+}
+function build(withCards,css){
+  sh.innerHTML='<style>'+BASE_CSS+'\n</style><style id="dyn"></style>'+pvHtml(withCards);
+  styleEl=sh.getElementById?sh.getElementById('dyn'):sh.querySelector('#dyn');
+  styleEl.textContent=toContainer(css);
+  var fr=sh.querySelector('.frame');
+  fr.addEventListener('submit',function(e){
+    var prevented=e.defaultPrevented;e.preventDefault();
+    if(!prevented){
+      var o=document.createElement('div');o.className='reload';
+      o.textContent='A página recarregou e tudo que estava na tela sumiu. Falta o event.preventDefault().';
+      fr.appendChild(o);clearTimeout(timers.reload);
+      timers.reload=setTimeout(function(){renderPreview(true)},2400);
+    }
+  });
+  fit();
+  return fr;
+}
+function toast(fr,m){
+  var t=document.createElement('div');t.className='toast';t.textContent=m;fr.appendChild(t);setTimeout(function(){t.remove()},2600);
+}
+function setErr(msg,bad){var p=$('perr');p.hidden=!msg;p.textContent=msg||'';p.className='perr '+(bad?'bad':'ok')}
+/* Plano B: se o navegador bloquear a execução do texto do código, reproduz o mesmo comportamento a partir das linhas já escritas. */
+function simulate(fr,txt){
+  var q=function(id){return fr.querySelector('[data-id="'+id+'"]')};
+  var has=function(s){return txt.indexOf(s)>-1};
+  var form=q('form-recado'),mural=q('mural'),contador=q('contador'),nomeEl=q('nome'),msgEl=q('mensagem'),humEl=q('humor');
+  if(has("form.addEventListener('submit'")){
+    form.addEventListener('submit',function(e){
+      if(has('event.preventDefault()'))e.preventDefault();
+      if(!has('const humor'))return;
+      var nome=nomeEl.value.trim(),msg=msgEl.value.trim(),hum=humEl.value;
+      if(has("if (nome === ''")&&(nome===''||msg==='')){toast(fr,'Preencha o nome e o recado!');return}
+      if(!has("createElement('article')"))return;
+      var card=document.createElement('article');card.className='card humor-'+hum;
+      var info=document.createElement('div');info.className='info';
+      var t=document.createElement('h3');t.textContent=nome;
+      var p=document.createElement('p');p.textContent=msg;
+      var s=document.createElement('small');s.textContent='Humor: '+hum;
+      if(has('info.appendChild(titulo)')){info.appendChild(t);info.appendChild(p);info.appendChild(s)}
+      if(has('card.appendChild(info)'))card.appendChild(info);
+      if(has('mural.appendChild(card)'))mural.appendChild(card);
+      if(has("btnRemover = document")){
+        var b=document.createElement('button');b.type='button';b.textContent='Remover';b.className='btn-remover';
+        b.addEventListener('click',function(){card.remove();contador.textContent=mural.children.length});
+        card.appendChild(b);
+      }
+      if(has('contador.textContent = mural.children.length;\n  form.reset()'))contador.textContent=mural.children.length;
+      if(has('form.reset()'))form.reset();
+      if(has('inputNome.focus()'))nomeEl.focus();
+    });
+  }
+  if(has("btnLimpar.addEventListener"))q('btn-limpar').addEventListener('click',function(){mural.innerHTML='';contador.textContent=mural.children.length});
+  if(has("btnTema.addEventListener"))q('btn-tema').addEventListener('click',function(){fr.classList.toggle('escuro')});
+}
+
+function flagsOf(tab){var v=visibility(tab,S.step,S.rev),f={};tab.lines.forEach(function(l,i){if(v[i]&&l.flag)f[l.flag]=true});return f}
+function drawMem(mem,f,mural){
+  var m=$('mem'),h='<h3>Memória do app</h3>';
+  if(!f.mem||!mem){m.innerHTML=h+'<div class="none">Ainda não existe nenhuma lista. O app só tem a tela.</div>';return}
+  h+='<div>const recados = [</div>';
+  if(!mem.length)h+='<div class="it none">vazia</div>';
+  mem.forEach(function(r,i){
+    var msg=String(r.mensagem);if(msg.length>16)msg=msg.slice(0,15)+'…';
+    h+='<div class="it"><span class="ix">['+i+']</span><span>{ nome: "'+esc(r.nome)+'", mensagem: "'+esc(msg)+'", humor: "'+esc(r.humor)+'" }</span></div>';
+  });
+  h+='<div>];</div><div class="len">recados.length = '+mem.length+'</div>';
+  var tela=mural?mural.children.length:0;
+  if(f.push&&tela!==mem.length)h+='<div class="diff">Atenção: a tela mostra '+tela+' card(s), mas a memória tem '+mem.length+' ficha(s). Tela e memória ficaram diferentes.</div>';
+  m.innerHTML=h;
+}
+function simArr(fr,f){
+  var q=function(id){return fr.querySelector('[data-id="'+id+'"]')};
+  var form=q('form-recado'),mural=q('mural'),cont=q('contador'),nome=q('nome'),msg=q('mensagem'),hum=q('humor');
+  var arr=f.mem?[]:null;
+  function mk(r,onrm){
+    var c=document.createElement('article');c.className='card humor-'+r.humor;
+    var i=document.createElement('div');i.className='info';
+    var t=document.createElement('h3');t.textContent=r.nome;
+    var p=document.createElement('p');p.textContent=r.mensagem;
+    var s=document.createElement('small');s.textContent='Humor: '+r.humor;
+    i.appendChild(t);i.appendChild(p);i.appendChild(s);c.appendChild(i);
+    var b=document.createElement('button');b.type='button';b.className='btn-remover';b.textContent='Remover';
+    if(onrm)b.addEventListener('click',function(){onrm(c)});c.appendChild(b);return c;
+  }
+  function show(){mural.innerHTML='';arr.forEach(function(r,i){mural.appendChild(mk(r,f.splice?function(){arr.splice(i,1);show()}:(f.pastedrm?function(c){c.remove();cont.textContent=mural.children.length}:null)))});cont.textContent=arr.length}
+  if(f.init&&f.fn)show();
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var r={nome:nome.value.trim(),mensagem:msg.value.trim(),humor:hum.value};
+    if(r.nome===''||r.mensagem===''){toast(fr,'Preencha o nome e o recado!');return}
+    if(f.push&&arr)arr.push(r);
+    if(f.oldadd){var c=mk(r,f.oldrm?function(c){c.remove();cont.textContent=mural.children.length}:null);mural.appendChild(c);cont.textContent=mural.children.length}
+    if(f.call&&f.fn)show();
+    form.reset();nome.focus();
+  });
+  q('btn-limpar').addEventListener('click',function(){if(f.limpaArr&&arr){arr.length=0;show()}else{mural.innerHTML='';cont.textContent=mural.children.length}});
+  q('btn-tema').addEventListener('click',function(){fr.classList.toggle('escuro')});
+  return arr;
+}
+function renderArr(){
+  var tab=T(),f=flagsOf(tab),mem=null,fr=build(false,fullCss());
+  var q=function(id){return fr.querySelector('[data-id="'+id+'"]')};
+  var fake={getElementById:q,createElement:function(t){return document.createElement(t)},body:fr};
+  var prog=visibleText(tab);
+  var upd=function(){drawMem(mem,f,q('mural'))};
+  var later=function(){setTimeout(upd,0)};
+  fr.addEventListener('click',later);fr.addEventListener('submit',later);
+  try{
+    new Function('document','alert','__mem',prog+'\n;__mem(typeof recados==="undefined"?null:recados);')(fake,function(m){toast(fr,String(m))},function(a){mem=a});
+    setErr(prog?'✔ O código até aqui roda sem erro':'',false);
+  }catch(e){
+    if(e instanceof EvalError||/unsafe-eval|Content Security/i.test(String(e.message))){
+      fr=build(false,fullCss());q=function(id){return fr.querySelector('[data-id="'+id+'"]')};
+      fr.addEventListener('click',later);fr.addEventListener('submit',later);
+      mem=simArr(fr,f);setErr(prog?'✔ Prévia simulada para o código até aqui':'',false);
+    }else setErr('✖ Erro no código: '+e.message,true);
+  }
+  upd();
+  $('expect').innerHTML='<b>Teste agora:</b> '+esc(tab.steps[S.step].expect);
+  fit();
+  startDemo(fr,prog,'arr');
+}
+
+var demoTok=0,demoP=Promise.resolve(),skipDemo=false,schedTok=0;
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function say(t){var a=$('acao');a.hidden=!t;a.textContent=t||''}
+var DEMO_DATA=[['Ana','Bom dia, turma!','feliz'],['Bruno','Quem faz o HTML hoje?','tranquilo'],['Carla','Segunda-feira de novo...','cansado']];
+function startDemo(fr,prog,kind){
+  if(skipDemo||!($('auto').checked||S.force)){demoP=Promise.resolve();say('');return}
+  var tok=++demoTok;
+  var live=function(){return tok===demoTok};
+  var q=function(sel){return fr.querySelector(sel)};
+  var ids=function(id){return fr.querySelector('[data-id="'+id+'"]')};
+  var has=function(t){return prog.indexOf(t)>-1};
+  function pulse(el){if(!el)return Promise.resolve();el.classList.add('pulse');return sleep(550).then(function(){el.classList.remove('pulse')})}
+  async function click(el){await pulse(el);if(!live())return false;el.click();fit();return true}
+  async function fill(d){
+    var n=ids('nome');await pulse(n);n.value='';
+    for(var i=1;i<=d[0].length&&live();i++){n.value=d[0].slice(0,i);await sleep(70)}
+    if(!live())return false;
+    ids('humor').value=d[2];ids('mensagem').value=d[1];return true;
+  }
+  async function publish(d,label){
+    say(label);if(!(await fill(d)))return false;
+    say('Clicando em Publicar...');if(!(await click(q('button[type=submit]'))))return false;
+    await sleep(1000);fit();return live();
+  }
+  demoP=(async function(){
+    try{
+      if(!(await publish(DEMO_DATA[0],'Demonstração: preenchendo o formulário...')))return;
+      if(q('.reload')){say('A página recarregou e tudo que estava na tela sumiu! Falta o event.preventDefault().');return}
+      if(has("if (nome === ''")){
+        say('Agora com o nome vazio...');var n=ids('nome');await pulse(n);n.value='';
+        if(!(await click(q('button[type=submit]'))))return;await sleep(1500);if(!live())return;
+      }
+      if(!(await publish(DEMO_DATA[1],'Publicando mais um recado...')))return;
+      if(kind==='arr'){if(!(await publish(DEMO_DATA[2],'E mais um...')))return}
+      var rm=fr.querySelectorAll('.btn-remover');
+      var hasRm=kind==='arr'?has('btnRemover.textContent'):has('btnRemover.addEventListener');
+      if(hasRm&&rm.length){
+        var alvo=kind==='arr'&&rm[1]?rm[1]:rm[0];
+        say('Clicando em Remover no '+(alvo===rm[0]?'primeiro':'segundo')+' card...');
+        if(!(await click(alvo)))return;await sleep(1000);if(!live())return;
+      }
+      if(has('btnLimpar.addEventListener')){say('Clicando em Limpar...');if(!(await click(ids('btn-limpar'))))return;await sleep(1000);if(!live())return}
+      if(has('btnTema.addEventListener')){
+        say('Clicando em Tema...');if(!(await click(ids('btn-tema'))))return;await sleep(1000);if(!live())return;
+        if(!(await click(ids('btn-tema'))))return;await sleep(500);if(!live())return;
+      }
+      say('Pronto. Agora é a sua vez: teste você mesmo na prévia.');
+    }catch(e){}
+  })();
+}
+function renderPreview(noDemo){
+  clearTimeout(timers.reload);demoTok++;skipDemo=!!noDemo;
+  var tab=T();
+  $('mem').hidden=(S.tab!=='arr');
+  $('democtl').hidden=(S.tab==='css');
+  if(S.tab==='css')say('');
+  if(S.tab==='arr'){renderArr();return}
+  if(S.tab==='css'){
+    build(true,visibleText(CSS));setErr('');
+  }else{
+    var fr=build(false,fullCss());
+    var q=function(id){return fr.querySelector('[data-id="'+id+'"]')};
+    var fake={getElementById:q,createElement:function(t){return document.createElement(t)},body:fr};
+    var prog=visibleText(JS);
+    try{
+      new Function('document','alert',prog)(fake,function(m){toast(fr,String(m))});
+      setErr(prog?'✔ O código até aqui roda sem erro':'',false);
+    }catch(e){
+      if(e instanceof EvalError||/unsafe-eval|Content Security/i.test(String(e.message))){
+        build(false,fullCss());simulate(sh.querySelector('.frame'),prog);setErr(prog?'✔ Prévia simulada para o código até aqui':'',false);
+      }else setErr('✖ Erro no código: '+e.message,true);
+    }
+  }
+  $('expect').innerHTML='<b>Teste agora:</b> '+esc(tab.steps[S.step].expect);
+  fit();
+  if(S.tab==='js')startDemo(sh.querySelector('.frame'),visibleText(JS),'js');
+}
+
+/* ---------- navegação ---------- */
+function stopType(){clearTimeout(timers.type);S.typing=null}
+function stopPlay(){S.playing=false;schedTok++;clearTimeout(timers.play);$('b-play').textContent='▶ Tocar sozinho'}
+function refresh(){renderCode();renderSteps();renderExplain();updButtons()}
+function updButtons(){
+  var tab=T(),atStart=S.step===0&&S.rev===0,atEnd=S.step===tab.steps.length-1&&S.rev>=stepCount(tab,S.step);
+  $('b-prev').disabled=atStart;$('b-next').disabled=atEnd;
+}
+function autoVp(){
+  var want=S.tab==='css'?(S.step===4?'cel':'pc'):'cel';
+  setVp(want,true);
+}
+function setVp(v,quiet){
+  S.vp=v;$('vp-pc').setAttribute('aria-pressed',v==='pc');$('vp-cel').setAttribute('aria-pressed',v==='cel');
+  if(!quiet)fit();else fit();
+}
+function typeLine(idx,done){
+  var line=T().lines[idx].t;
+  if(reduce||T().lines[idx].grp){done();return}
+  S.typing={idx:idx,len:0};
+  (function tick(){
+    if(!S.typing)return;
+    S.typing.len+=2;
+    if(S.typing.len>=line.length){S.typing=null;renderCode();done();return}
+    renderCode();timers.type=setTimeout(tick,16);
+  })();
+}
+function next(){
+  var tab=T();stopType();
+  if(S.rev<stepCount(tab,S.step)){
+    S.rev++;S.sel=null;
+    var idx=newestIdx(tab,S.step,S.rev);
+    refresh();
+    typeLine(idx,function(){renderPreview();if(S.playing)schedule()});
+    return;
+  }
+  if(S.step<tab.steps.length-1){
+    S.step++;S.rev=0;S.sel=null;autoVp();refresh();renderPreview();
+    if(S.playing)schedule(900);
+  }else stopPlay();
+}
+function prev(){
+  var tab=T();stopType();stopPlay();S.sel=null;
+  if(S.rev>0)S.rev--;
+  else if(S.step>0){S.step--;S.rev=stepCount(tab,S.step);autoVp()}
+  refresh();renderPreview();
+}
+function jump(i){stopType();stopPlay();S.step=i;S.rev=0;S.sel=null;autoVp();refresh();renderPreview()}
+function resetStep(){stopType();stopPlay();S.rev=0;S.sel=null;refresh();renderPreview()}
+function schedule(ms){
+  clearTimeout(timers.play);
+  var tab=T(),atEnd=S.step===tab.steps.length-1&&S.rev>=stepCount(tab,S.step);
+  if(atEnd){stopPlay();return}
+  var tk=++schedTok;
+  demoP.then(function(){if(!S.playing||tk!==schedTok)return;timers.play=setTimeout(function(){if(S.playing)next()},ms||1500)});
+}
+function play(){
+  if(S.playing){stopPlay();return}
+  S.playing=true;$('b-play').textContent='❚❚ Pausar';next();
+}
+function setTab(t){
+  stopType();stopPlay();S.tab=t;S.step=0;S.rev=0;S.sel=null;
+  $('tab-css').setAttribute('aria-selected',t==='css');$('tab-js').setAttribute('aria-selected',t==='js');$('tab-arr').setAttribute('aria-selected',t==='arr');
+  $('fname').textContent=T().file;autoVp();renderDays();refresh();renderPreview();
+  window.scrollTo({top:0,behavior:reduce?'auto':'smooth'});
+}
+
+/* ---------- eventos ---------- */
+$('tab-css').addEventListener('click',function(){setTab('css')});
+$('tab-js').addEventListener('click',function(){setTab('js')});
+$('tab-arr').addEventListener('click',function(){setTab('arr')});
+$('b-next').addEventListener('click',function(){stopPlay();next()});
+$('b-prev').addEventListener('click',prev);
+$('b-play').addEventListener('click',play);
+$('b-reset').addEventListener('click',resetStep);
+$('b-demo').addEventListener('click',function(){S.force=true;renderPreview();S.force=false});
+$('vp-pc').addEventListener('click',function(){setVp('pc')});
+$('vp-cel').addEventListener('click',function(){setVp('cel')});
+$('steps').addEventListener('click',function(e){var b=e.target.closest('[data-s]');if(b)jump(+b.dataset.s)});
+$('days').addEventListener('click',function(e){var b=e.target.closest('[data-go]');if(b&&b.dataset.go!==S.tab)setTab(b.dataset.go)});
+$('explain').addEventListener('click',function(e){var b=e.target.closest('[data-go]');if(b)setTab(b.dataset.go)});
+$('code').addEventListener('click',function(e){
+  var b=e.target.closest('.ln');if(!b)return;
+  stopPlay();S.sel=+b.dataset.i;renderCode();renderExplain();
+});
+document.addEventListener('keydown',function(e){
+  var t=e.composedPath&&e.composedPath()[0],tag=t&&t.tagName;
+  if(/INPUT|TEXTAREA|SELECT/.test(tag||''))return;
+  if(e.key==='ArrowRight'&&!$('b-next').disabled){e.preventDefault();stopPlay();next()}
+  else if(e.key==='ArrowLeft'&&!$('b-prev').disabled){e.preventDefault();prev()}
+});
+if(window.ResizeObserver){new ResizeObserver(function(){fit()}).observe(box)}
+window.addEventListener('resize',fit);
+
+/* ---------- início ---------- */
+$('fname').textContent=CSS.file;
+renderDays();
+setVp('pc',true);
+refresh();
+renderPreview();
+// Já abre com o passo 1 do CSS escrito, para a página não começar vazia.
+S.rev=stepCount(CSS,0);refresh();renderPreview();
+})();
+</script>
+
+</body></html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineDev - Meu Catálogo de Filmes</title>
+</head>
+<body>
+
+  <!-- CABEÇALHO -->
+  <header>
+    <h1>CineDev 🎬</h1>
+    <p>Sua lista de filmes, séries e documentários para maratonar</p>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main>
+    
+    <!-- SEÇÃO 1: FORMULÁRIO DE CADASTRO -->
+    <section>
+      <h2>Cadastrar Novo Filme / Série</h2>
+      
+      <form id="form-filme">
+        <div>
+          <label for="titulo-filme">Título do Filme ou Série:</label>
+          <input type="text" id="titulo-filme" placeholder="Ex: Matrix" required>
+        </div>
+
+        <div>
+          <label for="categoria-filme">Categoria:</label>
+          <select id="categoria-filme">
+            <option value="Ficção Científica">Ficção Científica</option>
+            <option value="Ação">Ação</option>
+            <option value="Animação">Animação</option>
+            <option value="Documentário">Documentário</option>
+          </select>
+        </div>
+
+        <button type="submit">Cadastrar Título</button>
+      </form>
+    </section>
+
+    <hr>
+
+    <!-- SEÇÃO 2: LISTA DE FILMES -->
+    <section>
+      <h2>Meus Títulos</h2>
+      
+      <div id="lista-filmes">
+        
+        <!-- Card 1 -->
+        <article>
+          <h3>Matrix</h3>
+          <p><strong>Categoria:</strong> Ficção Científica</p>
+          <p><strong>Status:</strong> Assistido</p>
+          <button type="button">Marcar como Assistido</button>
+          <button type="button">Excluir</button>
+        </article>
+
+        <!-- Card 2 -->
+        <article>
+          <h3>Spider-Man: Into the Spider-Verse</h3>
+          <p><strong>Categoria:</strong> Animação</p>
+          <p><strong>Status:</strong> Pendente</p>
+          <button type="button">Marcar como Assistido</button>
+          <button type="button">Excluir</button>
+        </article>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- RODAPÉ -->
+  <footer>
+    <p>CineDev • Projeto Prático Front-End 2026</p>
+  </footer>
+
+</body>
+</html>
