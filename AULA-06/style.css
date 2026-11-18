@@ -1,0 +1,116 @@
+body {
+    background: #1e1e2e;
+    color: #f0f0f0;
+    margin: 0;
+    padding: 20px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin: 0 0 20px 0;
+    background: #2d2d44;
+    border-radius: 8px;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+section {
+    background: #2d2d44;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-linha {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+}
+
+.form-linha div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+input,
+select {
+    padding: 8px;
+    border: 1px solid #6c6c9c;
+    border-radius: 5px;
+    background: #1e1e2e;
+    color: #f0f0f0;
+}
+
+button {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background: #7c5cff;
+    color: #ffffff;
+}
+
+#lista-filme {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 15px;
+    background: #3a3a5c;
+    border: 2px solid #f0a500;
+    border-radius: 8px;
+}
+
+.card.assistido {
+    background: #24543a;
+    border: 2px solid #3ddc84;
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.destaque .assistido {
+    border: 4px solid #ffffff;
+}
+
+.btn-remover {
+    background: #d9435e;
+}
+
+#btn-limpar {
+    background: #d9435e;
+}
+
+@media (max-width: 600px) {
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .form-linha {
+        flex-direction: column;
+    }
+}

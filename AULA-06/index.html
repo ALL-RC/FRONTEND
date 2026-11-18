@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Filmes</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Minha Lista de Filmes</h1>
+        <button id="btn-status">Destacar assistidos</button>
+    </header>
+
+    <main>
+        <section>
+            <h2>Adicionar filme</h2>
+            <form id="form-filme">
+                <div class="form-linha">
+                    <div>
+                        <label for="nome">Nome do filme</label>
+                        <input type="text" id="nome" placeholder="Digite o título">
+                    </div>
+                    <div>
+                        <label for="categoria">Categoria</label>
+                        <select id="categoria">
+                            <option value="">Escolha a categoria</option>
+                            <option value="animes">animes</option>
+                            <option value="ficção">ficção</option>
+                            <option value="suspense">suspense</option>
+                            <option value="terror">terror</option>
+                            <option value="ação">ação</option>
+                            <option value="romance">romance</option>
+                            <option value="sci-fi">sci-fi</option>
+                            <option value="aventura">aventura</option>
+                            <option value="drama">drama</option>
+                            <option value="musical">musical</option>
+                            <option value="conto de fadas">conto de fadas</option>
+                            <option value="dark-fantasy">dark-fantasy</option>
+                            <option value="documentário">documentário</option>
+                            <option value="fantasia">fantasia</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="status">Status</label>
+                        <select id="status">
+                            <option value="pendente">pendente</option>
+                            <option value="assistido">assistido</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit">Adicionar</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Meus filmes</h2>
+            <p id="contador"></p>
+            <div id="lista-filme"></div>
+            <button id="btn-limpar">Limpar todos</button>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
